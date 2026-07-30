@@ -1,0 +1,212 @@
+import os
+from pathlib import Path
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+from extensions import db
+from models.resume import Resume
+from utils.validators import validate_file
+from services.resume_parser import ResumeParser
+
+resume_bp = Blueprint("resume", __name__)
+
+
+@resume_bp.route("/upload", methods=["GET", "POST"])
+@login_required
+def upload():
+    """Upload PDF or DOCX resume."""
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("No file part in the request.", "danger")
+            return redirect(request.url)
+
+        file = request.files["file"]
+        is_valid, err_msg = validate_file(file)
+        if not is_valid:
+            flash(err_msg, "danger")
+            return render_template("upload.html")
+
+        # Save file securely
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit(".", 1)[1].lower()
+        upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
+        upload_dir.mkdir(exist_ok=True, parents=True)
+
+        saved_path = upload_dir / f"user_{current_user.id}_{filename}"
+        file.save(saved_path)
+        file_size = saved_path.stat().st_size
+
+        try:
+            # Extract raw text and parse JSON
+            raw_text = ResumeParser.extract_text(str(saved_path), ext)
+            if not raw_text.strip():
+                flash("Failed to extract readable text from file. Please ensure the document is not an image-only scan.", "warning")
+
+            parsed_data = ResumeParser.parse_resume(raw_text)
+
+            resume = Resume(
+                user_id=current_user.id,
+                filename=filename,
+                filepath=str(saved_path),
+                file_type=ext,
+                file_size=file_size,
+                raw_text=raw_text,
+            )
+            resume.parsed_json = parsed_data
+
+            db.session.add(resume)
+            db.session.commit()
+
+            flash(f"Resume '{filename}' successfully uploaded and parsed!", "success")
+            return redirect(url_for("resume.detail", resume_id=resume.id))
+
+        except Exception as e:
+            if saved_path.exists():
+                saved_path.unlink()
+            flash(f"Error processing document: {str(e)}", "danger")
+            return render_template("upload.html")
+
+    return render_template("upload.html")
+
+
+@resume_bp.route("/list")
+@login_required
+def list_resumes():
+    """List all uploaded resumes for current user."""
+    resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.uploaded_at.desc()).all()
+    return render_template("resumes_list.html", resumes=resumes)
+
+
+@resume_bp.route("/<int:resume_id>")
+@login_required
+def detail(resume_id):
+    """View detailed parsed resume information."""
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    return render_template("resume_detail.html", resume=resume)
+
+
+@resume_bp.route("/<int:resume_id>/delete", methods=["POST"])
+@login_required
+def delete(resume_id):
+    """Delete uploaded resume and associated file."""
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    
+    # Remove file from disk if present
+    if os.path.exists(resume.filepath):
+        try:
+            os.remove(resume.filepath)
+        except Exception:
+            pass
+
+    db.session.delete(resume)
+    db.session.commit()
+
+    flash("Resume deleted successfully.", "info")
+    return redirect(url_for("resume.list_resumes"))
+
+
+@resume_bp.route("/compare", methods=["GET", "POST"])
+@login_required
+def compare():
+    """Side-by-side comparison of two uploaded resumes."""
+    resumes = Resume.query.filter_by(user_id=current_user.id).order_by(Resume.uploaded_at.desc()).all()
+
+    r1_id = request.values.get("r1_id")
+    r2_id = request.values.get("r2_id")
+
+    r1 = Resume.query.filter_by(id=r1_id, user_id=current_user.id).first() if r1_id else None
+    r2 = Resume.query.filter_by(id=r2_id, user_id=current_user.id).first() if r2_id else None
+
+    comparison_data = None
+    if r1 and r2:
+        r1_json = r1.parsed_json or {}
+        r2_json = r2.parsed_json or {}
+
+        s1 = set()
+        for cat, list_s in r1_json.get("skills", {}).items():
+            if isinstance(list_s, list):
+                s1.update([x.lower() for x in list_s])
+
+        s2 = set()
+        for cat, list_s in r2_json.get("skills", {}).items():
+            if isinstance(list_s, list):
+                s2.update([x.lower() for x in list_s])
+
+        common_skills = s1.intersection(s2)
+        r1_unique = s1 - s2
+        r2_unique = s2 - s1
+
+        comparison_data = {
+            "r1": r1,
+            "r2": r2,
+            "r1_skill_count": len(s1),
+            "r2_skill_count": len(s2),
+            "common_skills": sorted([x.title() for x in common_skills]),
+            "r1_unique_skills": sorted([x.title() for x in r1_unique]),
+            "r2_unique_skills": sorted([x.title() for x in r2_unique]),
+            "r1_exp_count": len(r1_json.get("experience", [])),
+            "r2_exp_count": len(r2_json.get("experience", [])),
+            "r1_proj_count": len(r1_json.get("projects", [])),
+            "r2_proj_count": len(r2_json.get("projects", [])),
+        }
+
+    return render_template("compare.html", resumes=resumes, r1=r1, r2=r2, comp=comparison_data)
+
+
+@resume_bp.route("/<int:resume_id>/export/<string:fmt>")
+@login_required
+def export(resume_id, fmt):
+    """Export parsed resume in JSON, Markdown, or HTML format."""
+    import json
+    from flask import Response
+    
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    pdata = resume.parsed_json or {}
+    contact = pdata.get("contact_info", {})
+    name = contact.get("name", "Candidate")
+
+    if fmt == "json":
+        return Response(
+            json.dumps(pdata, indent=2),
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment;filename=resume_{resume_id}.json"}
+        )
+
+    elif fmt in ["md", "markdown"]:
+        md_text = f"# {name}\n"
+        if contact.get("email"): md_text += f"- Email: {contact.get('email')}\n"
+        if contact.get("phone"): md_text += f"- Phone: {contact.get('phone')}\n"
+        md_text += "\n## Skills\n"
+        for cat, sks in pdata.get("skills", {}).items():
+            if sks:
+                md_text += f"- **{cat.title()}**: {', '.join(sks)}\n"
+        
+        md_text += "\n## Work Experience\n"
+        for exp in pdata.get("experience", []):
+            md_text += f"### {exp.get('title', 'Role')} - {exp.get('company', 'Company')}\n"
+            for b in exp.get("responsibilities", []):
+                md_text += f"- {b}\n"
+
+        return Response(
+            md_text,
+            mimetype="text/markdown",
+            headers={"Content-Disposition": f"attachment;filename=resume_{resume_id}.md"}
+        )
+
+    elif fmt == "html":
+        html_content = f"<html><head><title>{name} - Resume</title></head><body style='font-family:sans-serif;padding:20px;'>"
+        html_content += f"<h1>{name}</h1><p>{contact.get('email', '')} | {contact.get('phone', '')}</p>"
+        html_content += "<h2>Skills</h2><ul>"
+        for cat, sks in pdata.get("skills", {}).items():
+            if sks:
+                html_content += f"<li><strong>{cat.title()}</strong>: {', '.join(sks)}</li>"
+        html_content += "</ul></body></html>"
+
+        return Response(
+            html_content,
+            mimetype="text/html",
+            headers={"Content-Disposition": f"attachment;filename=resume_{resume_id}.html"}
+        )
+
+    flash("Unsupported export format.", "warning")
+    return redirect(url_for("resume.detail", resume_id=resume_id))

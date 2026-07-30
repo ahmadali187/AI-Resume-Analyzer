@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=production_secret_key_change_me
+      - DATABASE_URL=sqlite:///instance/resume_analyzer.db
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL}
+    volumes:
+      - ./instance:/app/instance
+      - ./uploads:/app/uploads
+      - ./reports:/app/reports

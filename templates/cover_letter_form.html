@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Cover Letter - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass-card p-4 p-md-5">
+                <h3 class="text-white fw-bold mb-2 text-center"><i class="fa-solid fa-file-pen text-primary me-2"></i>Generate Professional Cover Letter</h3>
+                <p class="text-muted text-center small mb-4">Create a customized, impact-driven cover letter using Groq API.</p>
+
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-light">Select Resume</label>
+                        <select name="resume_id" class="form-select" required>
+                            <option value="" disabled selected>-- Choose candidate resume --</option>
+                            {% for r in resumes %}
+                            <option value="{{ r.id }}">{{ r.filename }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-light">Target Company Name</label>
+                        <input type="text" name="company" class="form-control" placeholder="e.g. Google, Microsoft, Meta" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-light">Target Job Title / Role</label>
+                        <input type="text" name="job_role" class="form-control" placeholder="e.g. Senior Software Engineer" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Cover Letter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

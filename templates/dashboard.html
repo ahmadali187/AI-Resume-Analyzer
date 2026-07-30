@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-1">Welcome back, {{ current_user.name }} 👋</h2>
+            <p class="text-muted small mb-0">Here is an overview of your resume ATS performance, analytics, and activities.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('resume.compare') }}" class="btn btn-outline-info rounded-pill"><i class="fa-solid fa-code-compare me-1"></i>Compare Resumes</a>
+            <a href="{{ url_for('resume.upload') }}" class="btn btn-primary-gradient rounded-pill"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Upload Resume</a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="metric-round-icon metric-icon-resumes">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                </div>
+                <div>
+                    <h3 class="text-white fw-bold mb-0">{{ total_resumes }}</h3>
+                    <span class="text-muted small">Total Resumes</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="metric-round-icon metric-icon-score">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <div>
+                    <h3 class="text-white fw-bold mb-0">{{ avg_ats_score }}%</h3>
+                    <span class="text-muted small">Average ATS Score</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="metric-round-icon metric-icon-matches">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <h3 class="text-white fw-bold mb-0">{{ highest_ats_score }}%</h3>
+                    <span class="text-muted small">Highest ATS Score</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="metric-round-icon metric-icon-reports">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div>
+                    <h3 class="text-white fw-bold mb-0">{{ avg_job_match }}%</h3>
+                    <span class="text-muted small">Avg Job Match Rate</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Chart & Quick Actions -->
+    <div class="row g-4 mb-4">
+        <!-- Interactive Chart -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>ATS Score Progression Analytics</h5>
+                {% if ats_history_data %}
+                <div style="height: 240px; position: relative;">
+                    <canvas id="atsTrendChart"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-chart-area fa-3x mb-2 text-secondary"></i>
+                    <p class="mb-0">No analysis reports generated yet to chart trends.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('resume.upload') }}" class="btn btn-outline-light text-start p-3 rounded-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-cloud-arrow-up text-primary fs-5"></i>
+                        <div><div class="fw-bold">Upload Resume</div><div class="small text-muted">Parse PDF, DOCX, Images</div></div>
+                    </a>
+                    <a href="{{ url_for('resume.compare') }}" class="btn btn-outline-light text-start p-3 rounded-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-code-compare text-info fs-5"></i>
+                        <div><div class="fw-bold">Compare Resumes</div><div class="small text-muted">Side-by-side analysis</div></div>
+                    </a>
+                    <a href="{{ url_for('analysis.job_match') }}" class="btn btn-outline-light text-start p-3 rounded-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-bullseye text-warning fs-5"></i>
+                        <div><div class="fw-bold">Job Description Match</div><div class="small text-muted">Compare against target job</div></div>
+                    </a>
+                    <a href="{{ url_for('analysis.interview_prep') }}" class="btn btn-outline-light text-start p-3 rounded-3 d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-comments text-success fs-5"></i>
+                        <div><div class="fw-bold">Interview Preparation</div><div class="small text-muted">Tailored Q&A practice</div></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Uploaded Resumes -->
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Recent Uploaded Resumes</h5>
+            <a href="{{ url_for('resume.list_resumes') }}" class="text-primary text-decoration-none small">View All</a>
+        </div>
+
+        {% if resumes %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
+                <thead>
+                    <tr class="text-muted">
+                        <th>Filename</th>
+                        <th>Format</th>
+                        <th>Uploaded</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in resumes %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-file-lines text-primary"></i>
+                                <a href="{{ url_for('resume.detail', resume_id=r.id) }}" class="text-white text-decoration-none fw-medium">{{ r.filename }}</a>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary text-uppercase">{{ r.file_type }}</span></td>
+                        <td class="text-muted small">{{ r.uploaded_at.strftime('%b %d, %Y') }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('analysis.analyze', resume_id=r.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Analyze</a>
+                            <a href="{{ url_for('resume.detail', resume_id=r.id) }}" class="btn btn-sm btn-outline-light me-1"><i class="fa-solid fa-eye me-1"></i>View</a>
+                            <a href="{{ url_for('resume.export', resume_id=r.id, fmt='json') }}" class="btn btn-sm btn-outline-info me-1" title="Export JSON"><i class="fa-solid fa-file-code"></i></a>
+                            <a href="{{ url_for('resume.export', resume_id=r.id, fmt='md') }}" class="btn btn-sm btn-outline-warning" title="Export Markdown"><i class="fa-solid fa-file-markdown"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="fa-solid fa-folder-open fa-3x mb-3 text-secondary"></i>
+            <p class="mb-2">No resumes uploaded yet.</p>
+            <a href="{{ url_for('resume.upload') }}" class="btn btn-sm btn-primary-gradient">Upload First Resume</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if ats_history_data %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var ctx = document.getElementById('atsTrendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ ats_history_labels|tojson }},
+            datasets: [{
+                label: 'ATS Score %',
+                data: {{ ats_history_data|tojson }},
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#a855f7',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

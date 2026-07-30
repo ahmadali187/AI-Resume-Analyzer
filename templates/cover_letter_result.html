@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Cover Letter Generated - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="text-white fw-bold mb-1">Generated Cover Letter</h3>
+            <p class="text-muted small mb-0">Role: {{ cover_letter.job_role }} at {{ cover_letter.company }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('letterText').innerText); alert('Cover letter copied to clipboard!');" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-copy me-1"></i>Copy Text</button>
+            <a href="{{ url_for('analysis.cover_letter') }}" class="btn btn-primary-gradient"><i class="fa-solid fa-plus me-1"></i>New Letter</a>
+        </div>
+    </div>
+
+    <div class="glass-card p-4 p-md-5">
+        <div id="letterText" class="text-white lead font-monospace" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.8;">{{ cover_letter.content }}</div>
+    </div>
+</div>
+{% endblock %}

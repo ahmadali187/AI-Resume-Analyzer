@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Preparation - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass-card p-4 p-md-5">
+                <h3 class="text-white fw-bold mb-2 text-center"><i class="fa-solid fa-comments text-info me-2"></i>AI Interview Prep Generator</h3>
+                <p class="text-muted text-center small mb-4">Generate tailored technical, system design, HR, and behavioral interview questions based on your resume.</p>
+
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-light">Select Resume</label>
+                        <select name="resume_id" class="form-select" required>
+                            <option value="" disabled selected>-- Choose candidate resume --</option>
+                            {% for r in resumes %}
+                            <option value="{{ r.id }}">{{ r.filename }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-light">Target Job Role</label>
+                        <input type="text" name="job_role" class="form-control" placeholder="e.g. Python Backend Developer / Full Stack Architect">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold"><i class="fa-solid fa-lightbulb me-2"></i>Generate Interview Questions</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

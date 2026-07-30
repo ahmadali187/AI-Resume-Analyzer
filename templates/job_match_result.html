@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Job Match Result - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="text-white fw-bold mb-1">Job Match Analysis Result</h3>
+            <p class="text-muted small mb-0">Role: {{ match.job_description.title or 'Target Job' }} at {{ match.job_description.company or 'Target Company' }}</p>
+        </div>
+        <a href="{{ url_for('analysis.job_match') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-arrow-left me-1"></i>New Match</a>
+    </div>
+
+    <!-- Match Percentage Banner -->
+    <div class="glass-card p-4 mb-4 text-center">
+        <div class="score-badge {% if match.match_percentage >= 80 %}score-high{% elif match.match_percentage >= 60 %}score-mid{% else %}score-low{% endif %} mb-3">
+            {{ match.match_percentage }}%
+        </div>
+        <h4 class="text-white fw-bold">Overall Match Confidence</h4>
+        <p class="text-muted small mb-0">{{ match.analysis_json.get('required_experience_assessment', 'Overall candidate requirements evaluation.') }}</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Matching Skills -->
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-circle-check text-success me-2"></i>Matching Technologies & Skills</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for sk in match.analysis_json.get('matching_skills', []) %}
+                    <span class="badge-match-skill"><i class="fa-solid fa-circle-check me-1"></i>{{ sk }}</span>
+                    {% else %}
+                    <p class="text-muted small">No direct keyword overlap found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Missing Skills -->
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-circle-xmark text-danger me-2"></i>Missing Skills & Technologies</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for sk in match.missing_skills %}
+                    <span class="badge-missing-skill"><i class="fa-solid fa-circle-xmark me-1"></i>{{ sk }}</span>
+                    {% else %}
+                    <p class="text-muted small">No major missing technical skills detected!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skill Gap Learning Roadmap -->
+    {% set roadmap = match.analysis_json.get('skill_roadmap', []) %}
+    {% if roadmap %}
+    <div class="glass-card p-4 mb-4">
+        <h5 class="text-white fw-bold mb-4"><i class="fa-solid fa-route text-warning me-2"></i>Recommended Skill Gap Learning Roadmap</h5>
+        <div class="row g-4">
+            {% for item in roadmap %}
+            <div class="col-md-6 col-lg-4">
+                <div class="p-3 rounded-3 bg-dark border border-secondary h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-warning text-dark font-monospace fw-bold">{{ item.skill }}</span>
+                    </div>
+                    <ul class="list-unstyled text-muted small mb-0">
+                        <li class="mb-1"><i class="fa-solid fa-graduation-cap text-primary me-2"></i><strong>Course:</strong> {{ item.course }}</li>
+                        <li class="mb-1"><i class="fa-solid fa-book text-info me-2"></i><strong>Book:</strong> {{ item.book }}</li>
+                        <li class="mb-1"><i class="fa-solid fa-laptop-code text-success me-2"></i><strong>Project:</strong> {{ item.project }}</li>
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

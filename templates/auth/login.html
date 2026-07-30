@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Login - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="glass-card p-4 p-md-5">
+                <h3 class="text-white fw-bold mb-2 text-center">Welcome Back</h3>
+                <p class="text-muted text-center small mb-4">Log in to access your resumes & reports</p>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label text-light">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                            <label class="form-check-label text-muted small" for="remember">Remember me</label>
+                        </div>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="text-primary text-decoration-none small">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-2">Sign In</button>
+                </form>
+                <p class="text-center text-muted small mt-4 mb-0">
+                    Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-primary text-decoration-none fw-semibold">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

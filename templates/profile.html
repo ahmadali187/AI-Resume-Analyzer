@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile & Preferences - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Update Profile -->
+        <div class="col-lg-7">
+            <div class="glass-card p-4 p-md-5 h-100">
+                <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-id-card text-primary me-2"></i>Profile Information & Career Metadata</h4>
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Full Name</label>
+                            <input type="text" name="name" value="{{ current_user.name }}" class="form-control bg-dark text-white border-secondary" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Email Address</label>
+                            <input type="email" name="email" value="{{ current_user.email }}" class="form-control bg-dark text-white border-secondary" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Current Job Title</label>
+                            <input type="text" name="job_title" value="{{ current_user.job_title or '' }}" placeholder="e.g. Senior Software Engineer" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Location</label>
+                            <input type="text" name="location" value="{{ current_user.location or '' }}" placeholder="e.g. San Francisco, CA" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Target Preferred Role</label>
+                            <input type="text" name="preferred_role" value="{{ current_user.preferred_role or '' }}" placeholder="e.g. Lead Backend Engineer" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">Portfolio Website</label>
+                            <input type="url" name="portfolio" value="{{ current_user.portfolio or '' }}" placeholder="https://myportfolio.com" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">GitHub Profile</label>
+                            <input type="url" name="github" value="{{ current_user.github or '' }}" placeholder="https://github.com/username" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-light">LinkedIn Profile</label>
+                            <input type="url" name="linkedin" value="{{ current_user.linkedin or '' }}" placeholder="https://linkedin.com/in/username" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-light">Executive Bio / Summary</label>
+                            <textarea name="bio" rows="3" placeholder="Brief professional bio summary..." class="form-control bg-dark text-white border-secondary">{{ current_user.bio or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill fw-bold mt-2"><i class="fa-solid fa-floppy-disk me-2"></i>Save Profile Metadata</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password & Preferences -->
+        <div class="col-lg-5">
+            <div class="glass-card p-4 p-md-5 h-100">
+                <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-key text-warning me-2"></i>Security & Credentials</h4>
+                <form method="POST" action="{{ url_for('auth.change_password') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label text-light">Current Password</label>
+                        <input type="password" name="current_password" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">New Password</label>
+                        <input type="password" name="new_password" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-light">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <button type="submit" class="btn btn-outline-light rounded-pill w-100 py-2 fw-bold"><i class="fa-solid fa-shield-halved me-2"></i>Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

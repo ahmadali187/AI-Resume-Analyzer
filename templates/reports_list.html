@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}My Reports - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white fw-bold mb-0">ATS Reports History</h3>
+        <a href="{{ url_for('reports.compare') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-code-compare me-1"></i>Compare Reports</a>
+    </div>
+
+    {% if reports %}
+    <div class="table-responsive glass-card p-4">
+        <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
+            <thead>
+                <tr class="text-muted">
+                    <th>ID</th>
+                    <th>Resume File</th>
+                    <th>ATS Score</th>
+                    <th>Date Generated</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td>#{{ r.id }}</td>
+                    <td><strong class="text-white">{{ r.resume.filename }}</strong></td>
+                    <td>
+                        <span class="badge {% if r.ats_score >= 80 %}bg-success{% elif r.ats_score >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                            {{ r.ats_score }}%
+                        </span>
+                    </td>
+                    <td class="text-muted small">{{ r.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('reports.view_report', report_id=r.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="fa-solid fa-eye me-1"></i>View</a>
+                        <a href="{{ url_for('reports.download', report_id=r.id, fmt='pdf') }}" class="btn btn-sm btn-outline-success me-1"><i class="fa-solid fa-file-pdf me-1"></i>PDF</a>
+                        <form method="POST" action="{{ url_for('reports.delete', report_id=r.id) }}" class="d-inline" onsubmit="return confirm('Delete report?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="glass-card p-5 text-center text-muted">
+        <i class="fa-solid fa-chart-line fa-3x mb-3 text-secondary"></i>
+        <h5 class="text-white fw-bold">No Analysis Reports Found</h5>
+        <p>Upload a resume and run ATS analysis to generate your first report.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{
+  "name": "AI Resume Analyzer & ATS Optimizer",
+  "short_name": "ResumeAI",
+  "description": "Enterprise AI Resume Analyzer, Job Description Matcher & ATS Optimizer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/static/img/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

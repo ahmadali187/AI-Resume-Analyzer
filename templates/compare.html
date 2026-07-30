@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Comparison Matrix - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-code-compare text-info me-2"></i>Side-by-Side Resume Comparison</h3>
+            <p class="text-muted small mb-0">Select two uploaded resumes to analyze ATS score differences, skill overlaps, and experience gaps.</p>
+        </div>
+        <a href="{{ url_for('resume.list_resumes') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-arrow-left me-1"></i>Back to Resumes</a>
+    </div>
+
+    <!-- Selection Form -->
+    <div class="glass-card p-4 mb-4">
+        <form method="POST" action="{{ url_for('resume.compare') }}" class="row g-3 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-5">
+                <label class="form-label text-light fw-semibold">Base Resume #1</label>
+                <select name="r1_id" class="form-select bg-dark text-white border-secondary" required>
+                    <option value="">-- Select First Resume --</option>
+                    {% for res in resumes %}
+                    <option value="{{ res.id }}" {% if r1 and r1.id == res.id %}selected{% endif %}>{{ res.filename }} (Uploaded: {{ res.uploaded_at.strftime('%Y-%m-%d') }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label text-light fw-semibold">Target Compare Resume #2</label>
+                <select name="r2_id" class="form-select bg-dark text-white border-secondary" required>
+                    <option value="">-- Select Second Resume --</option>
+                    {% for res in resumes %}
+                    <option value="{{ res.id }}" {% if r2 and r2.id == res.id %}selected{% endif %}>{{ res.filename }} (Uploaded: {{ res.uploaded_at.strftime('%Y-%m-%d') }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-gradient w-100 py-2 fw-bold"><i class="fa-solid fa-bolt me-1"></i>Compare Now</button>
+            </div>
+        </form>
+    </div>
+
+    {% if comp %}
+    <!-- Side-by-Side Matrix -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100 border-start border-primary border-4">
+                <h5 class="text-white fw-bold mb-2"><i class="fa-solid fa-file-pdf text-primary me-2"></i>{{ comp.r1.filename }}</h5>
+                <p class="text-muted small mb-3">Uploaded: {{ comp.r1.uploaded_at.strftime('%b %d, %Y') }}</p>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Skills Extracted</small>
+                        <strong class="text-info fs-5">{{ comp.r1_skill_count }}</strong>
+                    </div>
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Experience Entries</small>
+                        <strong class="text-success fs-5">{{ comp.r1_exp_count }}</strong>
+                    </div>
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Projects</small>
+                        <strong class="text-warning fs-5">{{ comp.r1_proj_count }}</strong>
+                    </div>
+                </div>
+                <h6 class="text-light fw-bold mt-3 mb-2">Unique Skills in #1:</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for sk in comp.r1_unique_skills %}
+                    <span class="badge bg-primary bg-opacity-20 text-primary border border-primary px-2 py-1">{{ sk }}</span>
+                    {% else %}
+                    <span class="text-muted small">No unique skills compared to #2.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100 border-start border-info border-4">
+                <h5 class="text-white fw-bold mb-2"><i class="fa-solid fa-file-lines text-info me-2"></i>{{ comp.r2.filename }}</h5>
+                <p class="text-muted small mb-3">Uploaded: {{ comp.r2.uploaded_at.strftime('%b %d, %Y') }}</p>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Skills Extracted</small>
+                        <strong class="text-info fs-5">{{ comp.r2_skill_count }}</strong>
+                    </div>
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Experience Entries</small>
+                        <strong class="text-success fs-5">{{ comp.r2_exp_count }}</strong>
+                    </div>
+                    <div class="p-2 bg-dark rounded border border-secondary text-center flex-fill">
+                        <small class="text-muted d-block">Projects</small>
+                        <strong class="text-warning fs-5">{{ comp.r2_proj_count }}</strong>
+                    </div>
+                </div>
+                <h6 class="text-light fw-bold mt-3 mb-2">Unique Skills in #2:</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for sk in comp.r2_unique_skills %}
+                    <span class="badge bg-info bg-opacity-20 text-info border border-info px-2 py-1">{{ sk }}</span>
+                    {% else %}
+                    <span class="text-muted small">No unique skills compared to #1.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Common Skills Overlap -->
+    <div class="glass-card p-4">
+        <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-handshake text-success me-2"></i>Common Shared Skills Overlap ({{ comp.common_skills|length }})</h5>
+        <div class="d-flex flex-wrap gap-2">
+            {% for sk in comp.common_skills %}
+            <span class="badge bg-success bg-opacity-20 text-success border border-success px-3 py-2 rounded-pill fs-6">{{ sk }}</span>
+            {% else %}
+            <p class="text-muted small mb-0">No direct skill overlaps found between these two resumes.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

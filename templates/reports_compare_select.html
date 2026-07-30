@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Reports - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass-card p-4 p-md-5">
+                <h3 class="text-white fw-bold mb-2 text-center"><i class="fa-solid fa-code-compare text-primary me-2"></i>Compare ATS Reports</h3>
+                <p class="text-muted text-center small mb-4">Select two or more reports to compare ATS scores side-by-side.</p>
+
+                <form method="GET" action="{{ url_for('reports.compare') }}">
+                    <div class="mb-4">
+                        {% for r in reports %}
+                        <div class="form-check mb-3 p-3 border border-secondary rounded-3 bg-dark">
+                            <input class="form-check-input ms-1 me-3" type="checkbox" name="id" value="{{ r.id }}" id="rep{{ r.id }}">
+                            <label class="form-check-label text-white w-100" for="rep{{ r.id }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><strong>#{{ r.id }}</strong> - {{ r.resume.filename }}</span>
+                                    <span class="badge bg-primary fs-6">{{ r.ats_score }}%</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 font-semibold text-uppercase">Compare Selected Reports</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

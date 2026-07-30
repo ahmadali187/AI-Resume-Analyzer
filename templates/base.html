@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Favicon & PWA Manifest -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#6366f1">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Glassmorphism Navbar -->
+    <nav class="navbar navbar-expand-lg glass-nav sticky-top navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" class="brand-logo-img" style="height: 48px; width: 48px; object-fit: cover; border-radius: 12px; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8)); transition: transform 0.3s ease;">
+                <span class="brand-text-title fs-5">AI Resume Analyzer</span>
+                <span class="brand-badge-ai">PRO</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-link navbar-nav ms-auto align-items-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-gauge me-1"></i>Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('resume.upload') }}"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Upload</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.job_match') }}"><i class="fa-solid fa-bullseye me-1"></i>Job Match</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.cover_letter') }}"><i class="fa-solid fa-file-pen me-1"></i>Cover Letter</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.interview_prep') }}"><i class="fa-solid fa-comments me-1"></i>Interview Prep</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('reports.list_reports') }}"><i class="fa-solid fa-chart-column me-1"></i>Reports</a></li>
+                        {% if current_user.is_admin %}
+                            <li class="nav-item"><a class="nav-link text-warning fw-semibold" href="{{ url_for('admin.index') }}"><i class="fa-solid fa-user-shield me-1"></i>Admin</a></li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle btn btn-outline-light btn-sm rounded-pill px-3 ms-2" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-user-circle me-1"></i>{{ current_user.name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark glass-card">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-id-card me-2"></i>Profile</a></li>
+                                <li><hr class="dropdown-divider border-secondary"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                        <li class="nav-item"><a class="btn btn-primary-gradient" href="{{ url_for('auth.register') }}">Get Started</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-4" aria-live="polite">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show glass-card text-white mb-3" role="alert">
+                        <i class="fa-solid fa-circle-info me-2"></i>{{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow-1 py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-nav py-4 mt-auto border-top border-secondary">
+        <div class="container text-center text-muted">
+            <p class="mb-0">&copy; 2026 AI Resume Analyzer</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

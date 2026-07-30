@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Server Error - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="glass-card p-5 d-inline-block col-md-6">
+        <h1 class="display-1 text-danger fw-bold mb-0">500</h1>
+        <h3 class="text-white fw-bold mb-3">Internal Server Error</h3>
+        <p class="text-muted mb-4">Something went wrong on our end. Please try again or return to the dashboard.</p>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary-gradient px-4">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

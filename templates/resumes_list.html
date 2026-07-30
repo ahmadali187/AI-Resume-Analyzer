@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}My Resumes - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white fw-bold mb-0">My Uploaded Resumes</h3>
+        <a href="{{ url_for('resume.upload') }}" class="btn btn-primary-gradient"><i class="fa-solid fa-plus me-1"></i>Upload New</a>
+    </div>
+
+    {% if resumes %}
+    <div class="row g-4">
+        {% for r in resumes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-secondary text-uppercase">{{ r.file_type }}</span>
+                        <small class="text-muted">{{ r.uploaded_at.strftime('%b %d, %Y') }}</small>
+                    </div>
+                    <h5 class="text-white fw-bold mb-2">{{ r.filename }}</h5>
+                    <p class="text-muted small mb-3">
+                        Extracted Words: {{ r.parsed_json.get('word_count', 0) }} | Skills Found: {{ r.parsed_json.get('skills', [])|length }}
+                    </p>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ url_for('analysis.analyze', resume_id=r.id) }}" class="btn btn-sm btn-primary-gradient flex-grow-1"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Analyze</a>
+                    <a href="{{ url_for('resume.detail', resume_id=r.id) }}" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-eye"></i></a>
+                    <form method="POST" action="{{ url_for('resume.delete', resume_id=r.id) }}" onsubmit="return confirm('Delete this resume?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-5 text-center text-muted">
+        <i class="fa-solid fa-folder-open fa-3x mb-3 text-secondary"></i>
+        <h5 class="text-white fw-bold">No Resumes Found</h5>
+        <p>You haven't uploaded any resumes yet.</p>
+        <a href="{{ url_for('resume.upload') }}" class="btn btn-primary-gradient mt-2">Upload First Resume</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

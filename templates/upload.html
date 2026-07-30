@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resume - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass-card p-4 p-md-5">
+                <h3 class="text-white fw-bold mb-2 text-center"><i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i>Upload Your Resume</h3>
+                <p class="text-muted text-center small mb-4">Supported formats: PDF, DOCX, DOC, TXT, PNG, JPG, JPEG (Max size: 10 MB)</p>
+
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="border border-2 border-dashed border-secondary rounded-4 p-5 text-center mb-4 bg-dark bg-opacity-50" id="dropArea">
+                        <i class="fa-solid fa-file-arrow-up fa-3x text-primary mb-3"></i>
+                        <h5 class="text-white fw-bold mb-2">Drag & Drop your resume here</h5>
+                        <p class="text-muted small mb-3">or click to browse your computer</p>
+                        <input type="file" name="file" id="fileInput" class="d-none" accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg">
+                        <button type="button" class="btn btn-outline-light rounded-pill px-4" onclick="document.getElementById('fileInput').click()">Select Document</button>
+                        <div id="fileSelected" class="mt-3 text-info fw-semibold d-none"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Upload & Extract Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileSelected = document.getElementById('fileSelected');
+    const dropArea = document.getElementById('dropArea');
+
+    fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length > 0) {
+            fileSelected.textContent = `Selected: ${fileInput.files[0].name}`;
+            fileSelected.classList.remove('d-none');
+        }
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    dropArea.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        if (files.length > 0) {
+            fileSelected.textContent = `Selected: ${files[0].name}`;
+            fileSelected.classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}
