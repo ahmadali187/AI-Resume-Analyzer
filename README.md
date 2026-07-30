@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📄 AI Resume Analyzer & ATS Optimizer
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
@@ -101,3 +102,6 @@ git push -u origin main
 ## 📜 License
 
 This project is licensed under the [MIT License](LICENSE).
+=======
+# AI-Resume-Analyzer
+>>>>>>> 22be800d5e279191bf6bf762f9b962e13ad20f43
