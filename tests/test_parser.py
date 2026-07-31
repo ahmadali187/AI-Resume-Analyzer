@@ -19,7 +19,7 @@ def test_resume_parser_structured_extraction():
     parsed = ResumeParser.parse_resume(sample_text)
 
     assert parsed["contact_info"]["email"] == "john.doe@example.com"
-    assert "Python" in parsed["skills"]
-    assert "Flask" in parsed["skills"]
-    assert "Docker" in parsed["skills"]
+    assert "Python" in parsed["flat_skills"]
+    assert "Flask" in parsed["flat_skills"]
+    assert "Docker" in parsed["flat_skills"]
     assert parsed["word_count"] > 20
