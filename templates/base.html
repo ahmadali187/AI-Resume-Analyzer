@@ -2,8 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{% block title %}{{ app_name }} - AI Resume Parsing & ATS Optimization{% endblock %}</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}AI Resume Analyzer & ATS Optimizer - Evaluate ATS scores, extract candidate skills, generate cover letters, and practice interview questions.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}AI resume analyzer, ATS score checker, resume parser, cover letter generator, interview prep, ATS optimizer{% endblock %}">
+    <meta name="author" content="AI Resume Analyzer Team">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.url }}">
+
+    <!-- Open Graph Social Media -->
+    <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AI Resume Analyzer & ATS Optimizer",
+      "url": "{{ request.url_root }}",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "description": "Enterprise AI-powered ATS resume evaluation, cover letter generation, and interview preparation platform."
+    }
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +52,6 @@
     <!-- Favicon & PWA Manifest -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#6366f1">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- Chart.js -->
@@ -23,14 +59,14 @@
 </head>
 <body>
     <!-- Glassmorphism Navbar -->
-    <nav class="navbar navbar-expand-lg glass-nav sticky-top navbar-dark">
+    <nav class="navbar navbar-expand-lg glass-nav sticky-top navbar-dark" aria-label="Main Navigation">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" class="brand-logo-img" style="height: 44px; width: 44px; object-fit: cover; border-radius: 12px; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8));">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('main.index') }}" aria-label="AI Resume Analyzer Home">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" width="44" height="44" loading="lazy" decoding="async" class="brand-logo-img" style="height: 44px; width: 44px; object-fit: cover; border-radius: 12px; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8));">
                 <span class="brand-text-title fs-5">AI Resume Analyzer</span>
-                <span class="brand-badge-ai badge bg-primary bg-opacity-30 text-primary border border-primary px-2 py-0" style="font-size: 10px;">PRO</span>
+                <span class="brand-badge-pro">PRO</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle Navigation Menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -97,9 +133,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="glass-nav py-4 mt-auto border-top border-secondary">
-        <div class="container text-center text-muted">
-            <p class="mb-0">&copy; 2026 AI Resume Analyzer & ATS Optimizer</p>
+    <footer class="glass-nav py-5 mt-auto border-top border-secondary text-light">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" width="36" height="36" loading="lazy" decoding="async" class="rounded-3">
+                        <span class="fw-bold fs-5 text-white">AI Resume Analyzer</span>
+                    </div>
+                    <p class="text-muted small mb-3">Enterprise-grade AI platform for ATS resume evaluation, skill gap breakdown, cover letter generation, and interview preparation.</p>
+                    <div class="d-flex gap-3 text-muted">
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-muted hover-light" aria-label="GitHub Repository"><i class="fa-brands fa-github fa-lg"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="text-muted hover-light" aria-label="LinkedIn Page"><i class="fa-brands fa-linkedin fa-lg"></i></a>
+                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="text-muted hover-light" aria-label="Twitter Profile"><i class="fa-brands fa-x-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Core Features</h6>
+                    <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                        <li><a href="{{ url_for('resume.upload') }}" class="text-muted text-decoration-none hover-light">ATS Resume Parser</a></li>
+                        <li><a href="{{ url_for('analysis.job_match') }}" class="text-muted text-decoration-none hover-light">Job Description Matcher</a></li>
+                        <li><a href="{{ url_for('analysis.cover_letter') }}" class="text-muted text-decoration-none hover-light">Cover Letter Generator</a></li>
+                        <li><a href="{{ url_for('analysis.interview_prep') }}" class="text-muted text-decoration-none hover-light">Interview Practice Q&A</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Resources & Sitemap</h6>
+                    <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                        <li><a href="{{ url_for('main.index') }}" class="text-muted text-decoration-none hover-light">Platform Home</a></li>
+                        <li><a href="{{ url_for('dashboard.index') }}" class="text-muted text-decoration-none hover-light">Candidate Dashboard</a></li>
+                        <li><a href="{{ url_for('reports.list_reports') }}" class="text-muted text-decoration-none hover-light">Saved ATS Reports</a></li>
+                        <li><a href="{{ url_for('main.sitemap') }}" class="text-muted text-decoration-none hover-light">XML Sitemap</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Security & Trust</h6>
+                    <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                        <li class="text-muted"><i class="fa-solid fa-shield-halved me-1 text-primary"></i> 256-bit AES Storage Encryption</li>
+                        <li class="text-muted"><i class="fa-solid fa-lock me-1 text-success"></i> SSL / HTTPS Protocol Secured</li>
+                        <li class="text-muted"><i class="fa-solid fa-user-check me-1 text-info"></i> Strict Data Privacy Policy</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary my-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center text-muted small gap-2">
+                <p class="mb-0">&copy; 2026 AI Resume Analyzer & ATS Optimizer. All rights reserved.</p>
+                <p class="mb-0 font-mono" style="font-size: 11px;">Version 1.0.0 | Enterprise Edition</p>
+            </div>
         </div>
     </footer>
 

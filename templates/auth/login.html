@@ -7,17 +7,17 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="glass-card p-4 p-md-5">
-                <h3 class="text-white fw-bold mb-2 text-center">Welcome Back</h3>
+                <h1 class="h3 text-white fw-bold mb-2 text-center">Welcome Back</h1>
                 <p class="text-muted text-center small mb-4">Log in to access your resumes & reports</p>
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label class="form-label text-light">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                        <label for="loginEmail" class="form-label text-light">Email Address</label>
+                        <input type="email" id="loginEmail" name="email" class="form-control" placeholder="name@example.com" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-light">Password</label>
-                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        <label for="loginPassword" class="form-label text-light">Password</label>
+                        <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••" required>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="form-check">

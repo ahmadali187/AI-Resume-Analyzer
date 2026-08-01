@@ -47,13 +47,37 @@ def create_app(config_name=None):
         from flask import jsonify
         return jsonify({"status": "ok", "app": "AI Resume Analyzer & ATS Optimizer"}), 200
 
+    # HTTPS Proxy Redirect Guard for Production
+    @app.before_request
+    def force_https_in_production():
+        from flask import request, redirect
+        if app.config.get("ENV") == "production" or not app.debug:
+            if request.headers.get("X-Forwarded-Proto") == "http":
+                url = request.url.replace("http://", "https://", 1)
+                return redirect(url, code=301)
+
     # Production Security Headers Middleware
     @app.after_request
     def set_security_headers(response):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        
+        # Content Security Policy (CSP) allowing Bootstrap, FontAwesome, Google Fonts, Chart.js
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https://api.groq.com;"
+        )
+        response.headers["Content-Security-Policy"] = csp
         return response
 
     # Error handlers

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}AI Resume Analyzer & ATS Optimizer - Optimize Your Career{% endblock %}
+{% block title %}AI Resume Analyzer & ATS Optimizer - Free ATS Score Checker{% endblock %}
+{% block meta_description %}Free AI Resume Analyzer & ATS Optimizer. Upload your PDF or DOCX resume, get instant ATS score evaluation, job description keyword matching, cover letter generation, and interview preparation.{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -8,28 +9,44 @@
     <div class="row align-items-center mb-5 py-4">
         <div class="col-lg-6 mb-4 mb-lg-0">
             <span class="badge badge-groq-powered mb-3">
-                <i class="fa-solid fa-bolt"></i> Powered by <span class="groq-text-gradient">Groq API</span>
+                <i class="fa-solid fa-bolt me-1"></i> Enterprise <span class="groq-text-gradient">AI Parsing Engine</span>
             </span>
             <h1 class="display-4 fw-extrabold text-white mb-3">
-                Optimize Your Resume for <span class="text-primary">ATS & Recruiters</span>
+                Optimize Your Resume for <span class="text-primary">ATS & Recruiter Systems</span>
             </h1>
             <p class="lead text-muted mb-4">
-                Upload your PDF or DOCX resume, get instant ATS score breakdown, compare with target job descriptions, generate cover letters, and unlock tailored interview prep questions.
+                Upload your PDF or DOCX resume to receive instant multi-category ATS scoring, keyword gap assessment, job description matching, tailored cover letters, and technical interview rehearsal flashcards.
             </p>
-            <div class="d-flex gap-3">
+            <div class="d-flex flex-wrap gap-3">
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary-gradient btn-lg">Go to Dashboard <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary-gradient btn-lg rounded-pill px-4">
+                        Access Candidate Dashboard <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{{ url_for('resume.upload') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                        Upload Resume File
+                    </a>
                 {% else %}
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-gradient btn-lg">Analyze My Resume Now <i class="fa-solid fa-upload ms-2"></i></a>
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">Log In</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-gradient btn-lg rounded-pill px-4">
+                        Analyze Resume Free <i class="fa-solid fa-cloud-arrow-up ms-2"></i>
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                        Account Sign In
+                    </a>
                 {% endif %}
             </div>
         </div>
         <div class="col-lg-6 text-center">
             <div class="glass-card p-4 animate-fade-in position-relative">
-                <div class="score-badge score-high mb-3">88%</div>
-                <h4 class="text-white fw-bold">Overall ATS Score</h4>
-                <p class="text-muted small mb-4">Optimized for top Tech & Fortune 500 ATS Parsers</p>
+                <!-- Radial Gauge Widget -->
+                <div class="radial-progress-wrapper mb-3">
+                    <svg class="radial-progress-svg" viewBox="0 0 120 120" width="140" height="140">
+                        <circle class="radial-progress-bg" cx="60" cy="60" r="50"></circle>
+                        <circle class="radial-progress-meter" cx="60" cy="60" r="50" stroke="#10b981" stroke-dasharray="314" stroke-dashoffset="37"></circle>
+                    </svg>
+                    <div class="radial-progress-value text-success">88%</div>
+                </div>
+                <h2 class="h4 text-white fw-bold">Overall ATS Compatibility Score</h2>
+                <p class="text-muted small mb-4">Optimized for Enterprise ATS Parsers (Greenhouse, Workday, Lever)</p>
                 <div class="row g-2 text-start">
                     <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary small text-white"><i class="fa-solid fa-check text-success me-1"></i> Formatting: 90%</div></div>
                     <div class="col-6"><div class="p-2 rounded bg-dark border border-secondary small text-white"><i class="fa-solid fa-check text-success me-1"></i> Skills Match: 85%</div></div>
@@ -40,39 +57,99 @@
         </div>
     </div>
 
-    <!-- Features Section -->
+    <!-- Core Features Section -->
     <div class="my-5 py-4">
-        <h2 class="text-center text-white fw-bold mb-2">Powerful Features</h2>
-        <p class="text-center text-muted mb-5">Everything you need to land your dream role</p>
+        <h2 class="text-center text-white fw-bold mb-2">Comprehensive Career Optimization Tools</h2>
+        <p class="text-center text-muted mb-5">Everything required to pass Applicant Tracking Systems and land top interviews</p>
 
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="glass-card p-4 h-100 text-center">
-                    <div class="round-feature-icon round-feature-icon-ats mx-auto">
+                    <div class="round-feature-icon round-feature-icon-ats mx-auto mb-3">
                         <i class="fa-solid fa-microchip"></i>
                     </div>
-                    <h5 class="text-white fw-bold">AI ATS Scoring</h5>
-                    <p class="text-muted">Instant multi-category evaluation of your resume's formatting, keywords, experience density, and readability.</p>
+                    <h3 class="h5 text-white fw-bold">Multi-Category ATS Parser</h3>
+                    <p class="text-muted">Parses skills, contact details, work experience, and education objects from PDF, DOCX, and text resume files.</p>
+                    <a href="{{ url_for('resume.upload') }}" class="btn btn-sm btn-outline-info rounded-pill px-3 mt-2">Try Resume Parser</a>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="glass-card p-4 h-100 text-center">
-                    <div class="round-feature-icon round-feature-icon-matcher mx-auto">
+                    <div class="round-feature-icon round-feature-icon-matcher mx-auto mb-3">
                         <i class="fa-solid fa-bullseye"></i>
                     </div>
-                    <h5 class="text-white fw-bold">Job Description Matcher</h5>
-                    <p class="text-muted">Compare your resume against specific job listings to discover missing skills, keywords, and custom roadmap suggestions.</p>
+                    <h3 class="h5 text-white fw-bold">Job Description Matcher</h3>
+                    <p class="text-muted">Evaluates your resume against specific target job listings to identify keyword gaps and missing technical skills.</p>
+                    <a href="{{ url_for('analysis.job_match') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 mt-2">Start Job Matching</a>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="glass-card p-4 h-100 text-center">
-                    <div class="round-feature-icon round-feature-icon-prep mx-auto">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <i class="fa-solid fa-file-signature"></i>
+                    <div class="round-feature-icon round-feature-icon-prep mx-auto mb-3">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <h3 class="h5 text-white fw-bold">Cover Letter & Interview Q&A</h3>
+                    <p class="text-muted">Generates executive cover letters and category-specific technical interview rehearsal flashcards.</p>
+                    <a href="{{ url_for('analysis.cover_letter') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3 mt-2">Generate Cover Letter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="my-5 py-4 bg-dark bg-opacity-40 rounded-4 p-4 p-md-5 border border-secondary border-opacity-30">
+        <h2 class="text-center text-white fw-bold mb-2">How AI Resume Optimization Works</h2>
+        <p class="text-center text-muted mb-5">Three simple steps to maximize your interview conversion rate</p>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="step-badge bg-primary text-white rounded-circle fs-4 fw-bold mx-auto mb-3" style="width:50px; height:50px; line-height:50px;">1</div>
+                <h3 class="h6 text-white fw-bold">Upload Resume File</h3>
+                <p class="text-muted small">Upload your resume in PDF or DOCX format or try our 1-click sample demo mode.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="step-badge bg-primary text-white rounded-circle fs-4 fw-bold mx-auto mb-3" style="width:50px; height:50px; line-height:50px;">2</div>
+                <h3 class="h6 text-white fw-bold">Run AI ATS Analysis</h3>
+                <p class="text-muted small">Our parsing engine scores keyword density, formatting structure, and skill alignment.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="step-badge bg-primary text-white rounded-circle fs-4 fw-bold mx-auto mb-3" style="width:50px; height:50px; line-height:50px;">3</div>
+                <h3 class="h6 text-white fw-bold">Export & Rehearse</h3>
+                <p class="text-muted small">Download formatted PDF/DOCX reports, copy cover letters, and practice interview Q&A.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frequently Asked Questions (FAQ) Section -->
+    <div class="my-5 py-4">
+        <h2 class="text-center text-white fw-bold mb-2">Frequently Asked Questions</h2>
+        <p class="text-center text-muted mb-4">Common questions about ATS parsers and resume optimization</p>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item glass-card border-secondary border-opacity-30 mb-3 overflow-hidden">
+                        <h3 class="accordion-header" id="faq1Head">
+                            <button class="accordion-button collapsed bg-dark text-white fw-bold fs-6" type="button" data-bs-toggle="collapse" data-bs-target="#faq1Collapse">
+                                What is an ATS Resume Score?
+                            </button>
+                        </h3>
+                        <div id="faq1Collapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small bg-dark bg-opacity-75">
+                                An ATS (Applicant Tracking System) score evaluates how cleanly software can extract your contact details, work experience, skills, and formatting keywords compared to job requirements.
+                            </div>
                         </div>
                     </div>
-                    <h5 class="text-white fw-bold">Cover Letter & Interview Prep</h5>
-                    <p class="text-muted">Generate tailored cover letters and category-specific interview questions based directly on your resume content.</p>
+                    <div class="accordion-item glass-card border-secondary border-opacity-30 mb-3 overflow-hidden">
+                        <h3 class="accordion-header" id="faq2Head">
+                            <button class="accordion-button collapsed bg-dark text-white fw-bold fs-6" type="button" data-bs-toggle="collapse" data-bs-target="#faq2Collapse">
+                                What file formats are supported?
+                            </button>
+                        </h3>
+                        <div id="faq2Collapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small bg-dark bg-opacity-75">
+                                We support PDF, DOCX, TXT, PNG, JPG, and JPEG files up to 10 MB in file size.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
