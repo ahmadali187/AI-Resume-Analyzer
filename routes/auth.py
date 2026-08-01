@@ -8,7 +8,18 @@ from models.user import User
 from models.admin_log import AdminLog
 from utils.security import sanitize_input
 
+from urllib.parse import urlparse, urljoin
+
 auth_bp = Blueprint("auth", __name__)
+
+
+def is_safe_url(target):
+    """Verifies that a redirect target URL belongs to the same host."""
+    if not target:
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -83,6 +94,9 @@ def login():
         AdminLog.log("LOGIN", user_id=user.id, details=f"User {user.email} logged in", ip_address=request.remote_addr)
 
         next_page = request.args.get("next")
+        if next_page and not is_safe_url(next_page):
+            next_page = None
+
         flash(f"Welcome back, {user.name}!", "success")
         return redirect(next_page or url_for("dashboard.index"))
 

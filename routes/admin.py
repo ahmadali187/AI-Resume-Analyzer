@@ -203,12 +203,71 @@ def reports_list():
     return render_template("admin/reports.html", reports=pagination.items, pagination=pagination)
 
 
+@admin_bp.route("/user/<int:user_id>/delete", methods=["POST"])
+@login_required
+@super_admin_required
+def delete_user(user_id):
+    """Only SUPER_ADMIN can delete a user account."""
+    user = User.query.get_or_404(user_id)
+    if user.role == User.ROLE_SUPER_ADMIN:
+        flash("SUPER_ADMIN account cannot be deleted.", "danger")
+        return redirect(url_for("admin.users_list"))
+
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", "warning")
+        return redirect(url_for("admin.users_list"))
+
+    # Clean up physical user files on disk
+    if user.photo:
+        avatar_path = Path(current_app.config["UPLOAD_FOLDER"]) / user.photo.lstrip("avatars/")
+        if avatar_path.exists():
+            try: avatar_path.unlink()
+            except Exception: pass
+
+    for r in user.resumes:
+        if r.filepath and os.path.exists(r.filepath):
+            try: os.remove(r.filepath)
+            except Exception: pass
+
+    email_bak = user.email
+    db.session.delete(user)
+    db.session.commit()
+    AdminLog.log("DELETE_USER", user_id=current_user.id, target_type="User", target_id=user_id, details=f"Deleted user account {email_bak}", ip_address=request.remote_addr)
+    flash(f"User account {email_bak} deleted successfully.", "info")
+    return redirect(url_for("admin.users_list"))
+
+
+@admin_bp.route("/resume/<int:resume_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_resume(resume_id):
+    """Admins can delete inappropriate or malicious resume uploads."""
+    resume = Resume.query.get_or_404(resume_id)
+    if resume.filepath and os.path.exists(resume.filepath):
+        try: os.remove(resume.filepath)
+        except Exception: pass
+
+    filename_bak = resume.filename
+    db.session.delete(resume)
+    db.session.commit()
+    AdminLog.log("DELETE_RESUME", user_id=current_user.id, target_type="Resume", target_id=resume_id, details=f"Admin deleted resume '{filename_bak}'", ip_address=request.remote_addr)
+    flash(f"Resume '{filename_bak}' deleted successfully.", "success")
+    return redirect(url_for("admin.resumes_list"))
+
+
 @admin_bp.route("/report/<int:report_id>/delete", methods=["POST"])
 @login_required
 @admin_required
 def delete_report(report_id):
-    """Admins can delete inappropriate reports."""
+    """Admins can delete inappropriate reports and clean up generated PDF/DOCX files."""
     report = Report.query.get_or_404(report_id)
+    out_dir = Path(current_app.config["REPORT_FOLDER"])
+    for ext in ["pdf", "docx"]:
+        f_path = out_dir / f"report_{report_id}.{ext}"
+        if f_path.exists():
+            try: f_path.unlink()
+            except Exception: pass
+
     db.session.delete(report)
     db.session.commit()
     AdminLog.log("DELETE_REPORT", user_id=current_user.id, target_type="Report", target_id=report_id, details=f"Deleted Report #{report_id}", ip_address=request.remote_addr)
@@ -226,6 +285,33 @@ def logs_list():
     return render_template("admin/logs.html", logs=pagination.items, pagination=pagination)
 
 
+def _update_env_file(key, value):
+    """Persists environment key-value pair to .env file on disk."""
+    try:
+        env_path = Path(current_app.config["BASE_DIR"]) / ".env"
+        lines = []
+        if env_path.exists():
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+        updated = False
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{key}="):
+                new_lines.append(f"{key}={value}\n")
+                updated = True
+            else:
+                new_lines.append(line)
+
+        if not updated:
+            new_lines.append(f"{key}={value}\n")
+
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        current_app.logger.error(f"Failed to update .env file: {e}")
+
+
 @admin_bp.route("/settings", methods=["GET", "POST"])
 @login_required
 @super_admin_required
@@ -238,12 +324,14 @@ def settings():
         if groq_key:
             os.environ["GROQ_API_KEY"] = groq_key
             current_app.config["GROQ_API_KEY"] = groq_key
+            _update_env_file("GROQ_API_KEY", groq_key)
         if groq_model:
             os.environ["GROQ_MODEL"] = groq_model
             current_app.config["GROQ_MODEL"] = groq_model
+            _update_env_file("GROQ_MODEL", groq_model)
 
         AdminLog.log("API_KEY_CHANGE", user_id=current_user.id, details="Updated Groq API configuration", ip_address=request.remote_addr)
-        flash("System settings and API Keys updated successfully!", "success")
+        flash("System settings and API Keys updated & persisted successfully!", "success")
         return redirect(url_for("admin.settings"))
 
     return render_template(

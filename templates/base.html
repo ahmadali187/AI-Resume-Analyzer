@@ -103,9 +103,71 @@
         </div>
     </footer>
 
+    <!-- AI Step Processing Overlay Modal -->
+    <div class="modal fade" id="aiProcessingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card text-white text-center p-4">
+                <div class="mb-3">
+                    <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-1" id="aiModalTitle">AI Engine Processing</h4>
+                <p class="text-muted small mb-3" id="aiModalSubtitle">Analyzing resume text & ATS metrics...</p>
+                <div class="text-start bg-dark p-3 rounded border border-secondary font-mono" id="aiStepsList" style="font-size: 13px;">
+                    <div class="step-item text-warning mb-2" id="step1"><i class="fa-solid fa-spinner fa-spin me-2"></i>Parsing document structure & contact details...</div>
+                    <div class="step-item text-muted mb-2" id="step2"><i class="fa-regular fa-circle me-2"></i>Evaluating ATS keyword density & formatting...</div>
+                    <div class="step-item text-muted mb-2" id="step3"><i class="fa-regular fa-circle me-2"></i>Computing skill gap roadmap...</div>
+                    <div class="step-item text-muted" id="step4"><i class="fa-regular fa-circle me-2"></i>Finalizing report score metrics...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    function triggerAiProcessingModal(title, steps) {
+        const modalEl = document.getElementById('aiProcessingModal');
+        if (!modalEl) return;
+        if (title) document.getElementById('aiModalTitle').textContent = title;
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        setTimeout(() => {
+            const s1 = document.getElementById('step1');
+            const s2 = document.getElementById('step2');
+            if (s1 && s2) {
+                s1.className = 'step-item text-success mb-2';
+                s1.innerHTML = '<i class="fa-solid fa-check-circle me-2"></i>Parsed document structure & contact details';
+                s2.className = 'step-item text-warning mb-2';
+                s2.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Evaluating ATS keyword density & formatting...';
+            }
+        }, 1200);
+
+        setTimeout(() => {
+            const s2 = document.getElementById('step2');
+            const s3 = document.getElementById('step3');
+            if (s2 && s3) {
+                s2.className = 'step-item text-success mb-2';
+                s2.innerHTML = '<i class="fa-solid fa-check-circle me-2"></i>Evaluated ATS keyword density & formatting';
+                s3.className = 'step-item text-warning mb-2';
+                s3.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Computing skill gap roadmap...';
+            }
+        }, 2600);
+
+        setTimeout(() => {
+            const s3 = document.getElementById('step3');
+            const s4 = document.getElementById('step4');
+            if (s3 && s4) {
+                s3.className = 'step-item text-success mb-2';
+                s3.innerHTML = '<i class="fa-solid fa-check-circle me-2"></i>Computed skill gap roadmap';
+                s4.className = 'step-item text-warning';
+                s4.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Finalizing report score metrics...';
+            }
+        }, 4000);
+    }
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(function(err) {

@@ -99,8 +99,10 @@ class ResumeParser:
 
         if ext == "pdf":
             text = cls._extract_pdf(path)
-        elif ext in ["docx", "doc"]:
+        elif ext == "docx":
             text = cls._extract_docx(path)
+        elif ext == "doc":
+            raise ValueError("Legacy binary .doc files are not supported. Please save your file as .docx or .pdf.")
         elif ext == "txt":
             try:
                 text = path.read_text(encoding="utf-8", errors="ignore")
@@ -635,12 +637,6 @@ class ResumeParser:
             else:
                 sections["header_unassigned"].append(line)
 
-        if sections["header_unassigned"]:
-            if not sections["education"]:
-                sections["education"] = sections["header_unassigned"]
-            elif not sections["experience"]:
-                sections["experience"] = sections["header_unassigned"]
-
         return sections
 
     @staticmethod
@@ -717,4 +713,4 @@ class ResumeParser:
         match = re.search(r'([A-Z][a-zA-Z\s]{2,18},\s*[A-Z]{2,3}(?:,\s*[A-Z][a-zA-Z\s]{2,15})?|[A-Z][a-zA-Z\s]{2,18},\s*[A-Z][a-zA-Z\s]{2,15})', text)
         if match and not any(kw in match.group(0).lower() for kw in ['developer', 'engineer', 'intern', 'self']):
             return match.group(0)
-        return "Gandhinagar, Gujarat, India"
+        return ""

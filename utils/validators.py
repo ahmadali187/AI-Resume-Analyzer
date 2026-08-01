@@ -2,7 +2,7 @@ import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 
-ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "png", "jpg", "jpeg"}
+ALLOWED_EXTENSIONS = {"pdf", "docx", "txt", "png", "jpg", "jpeg"}
 MAX_FILE_SIZE_MB = 10
 
 
@@ -20,8 +20,13 @@ def validate_file(file_obj) -> tuple[bool, str]:
         return False, "No file selected."
 
     filename = secure_filename(file_obj.filename)
+    ext = filename.rsplit(".", 1)[1].lower() if "." in filename else ""
+
+    if ext == "doc":
+        return False, "Legacy binary .doc files are not supported. Please convert your file to .docx or .pdf."
+
     if not allowed_file(filename):
-        return False, "Invalid file format. Only PDF and DOCX files are allowed."
+        return False, "Invalid file format. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
 
     # Seek end of file to check size
     file_obj.seek(0, os.SEEK_END)

@@ -296,3 +296,80 @@ def export(resume_id, fmt):
 
     flash("Unsupported export format.", "warning")
     return redirect(url_for("resume.detail", resume_id=resume_id))
+
+
+@resume_bp.route("/load-sample", methods=["POST"])
+@login_required
+def load_sample():
+    """1-Click Sample Demo Loader: auto-loads high-quality candidate resume data."""
+    sample_filename = "Sample_Alex_Morgan_Senior_Engineer.pdf"
+    
+    # Check if sample resume already exists for current user
+    existing = Resume.query.filter_by(user_id=current_user.id, filename=sample_filename).first()
+    if existing:
+        flash("Sample resume loaded!", "info")
+        return redirect(url_for("resume.detail", resume_id=existing.id))
+
+    upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
+    upload_dir.mkdir(exist_ok=True, parents=True)
+    saved_path = upload_dir / f"user_{current_user.id}_{sample_filename}"
+
+    sample_text = """
+Alex Morgan
+San Francisco, CA | (555) 234-5678 | alex.morgan@example.com | linkedin.com/in/alexmorgan-dev | github.com/alexmorgan-dev
+
+PROFESSIONAL SUMMARY
+Senior Full-Stack Engineer with 6+ years of experience architecting high-throughput cloud applications, microservices, and modern web applications using Python, Flask, React, PostgreSQL, Docker, and AWS. Proven track record of optimizing database performance by 40% and leading CI/CD automation pipelines.
+
+SKILLS
+Programming Languages: Python, JavaScript, TypeScript, SQL, HTML5, CSS3, Bash
+Frameworks & Libraries: Flask, Django, FastAPI, React, Redux, Next.js, Node.js, Bootstrap
+Databases: PostgreSQL, MySQL, Redis, MongoDB, SQLite
+DevOps & Cloud: AWS (S3, EC2, Lambda), Docker, Kubernetes, GitHub Actions, CI/CD, NGINX
+Developer Tools: Git, GitHub, VS Code, Postman, Pytest, Jest, Swagger
+
+WORK EXPERIENCE
+Senior Software Engineer | TechCorp Inc. | San Francisco, CA | 2021 - Present
+- Architected RESTful microservices using Flask and PostgreSQL handling 5M+ daily requests with 99.95% uptime.
+- Spearheaded database query optimization and indexing strategy, reducing P99 latency by 42%.
+- Engineered automated CI/CD pipeline using GitHub Actions and Docker, reducing deployment cycle times from 45 mins to 8 mins.
+- Led a team of 5 engineers, establishing strict code review standards and unit test coverage requirements (>85%).
+
+Full-Stack Developer | Innovate Soft | Austin, TX | 2018 - 2021
+- Developed responsive single-page web applications using React, Redux, and Python Flask REST APIs.
+- Implemented JWT authentication, role-based access control (RBAC), and AES-256 encrypted payload handling.
+- Optimized frontend asset bundle sizes using Webpack, improving Google Lighthouse performance score from 62 to 94.
+
+EDUCATION
+B.S. in Computer Science | University of California, Berkeley | 2014 - 2018
+- Graduated with Honors (GPA: 3.8/4.0)
+
+PROJECTS
+AI Resume Analyzer & ATS Optimizer | Python, Flask, Groq API, PostgreSQL, Docker
+- Built intelligent ATS resume parsing and scoring system analyzing candidates against job descriptions.
+- Integrated LLM API for dynamic cover letter generation and technical interview practice flashcards.
+"""
+
+    parsed_data = ResumeParser.parse_resume(sample_text)
+    
+    # Save mock file on disk if not present
+    if not saved_path.exists():
+        with open(saved_path, "w", encoding="utf-8") as f:
+            f.write(sample_text)
+
+    resume = Resume(
+        user_id=current_user.id,
+        filename=sample_filename,
+        filepath=str(saved_path),
+        file_type="pdf",
+        file_size=len(sample_text.encode('utf-8')),
+        raw_text=sample_text.strip(),
+    )
+    resume.parsed_json = parsed_data
+
+    db.session.add(resume)
+    db.session.commit()
+
+    flash("Sample resume successfully loaded for Demo Mode!", "success")
+    return redirect(url_for("resume.detail", resume_id=resume.id))
+

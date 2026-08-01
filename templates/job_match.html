@@ -15,7 +15,7 @@
                     <p class="text-muted small mb-0">Compare your candidate resume against target Job Description requirements and discover skill gaps.</p>
                 </div>
 
-                <form method="POST">
+                <form method="POST" onsubmit="handleFormSubmit(this)">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <!-- Searchable & Truncated Select Candidate Resume -->
@@ -55,7 +55,7 @@
                         <textarea name="content" class="form-control bg-dark text-white border-secondary" rows="8" placeholder="Paste full job description requirements, qualifications, and required tech stack here..." required></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold rounded-pill">
+                    <button type="submit" id="submitBtn" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold rounded-pill">
                         <i class="fa-solid fa-calculator me-2"></i>Calculate Match & Analyze Skill Gaps
                     </button>
                 </form>
@@ -80,6 +80,17 @@
 </div>
 
 <script>
+function handleFormSubmit(form) {
+    const btn = document.getElementById("submitBtn");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Analyzing & Matching...';
+    }
+    if (typeof triggerAiProcessingModal === 'function') {
+        triggerAiProcessingModal("Job Matcher AI Pipeline");
+    }
+}
+
 function updateSelectedResume(sel) {
     const opt = sel.options[sel.selectedIndex];
     const notice = document.getElementById("selectedResumeNotice");

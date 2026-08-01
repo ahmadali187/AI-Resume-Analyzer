@@ -38,7 +38,7 @@ def create_app(config_name=None):
         return {
             "app_name": "AI Resume Analyzer & ATS Optimizer",
             "groq_configured": bool(app.config.get("GROQ_API_KEY")),
-            "openai_configured": bool(app.config.get("GROQ_API_KEY"))
+            "openai_configured": bool(app.config.get("OPENAI_API_KEY"))
         }
 
     # Health Check Endpoint for Render & Uptime Monitoring
@@ -59,7 +59,7 @@ def create_app(config_name=None):
     # Error handlers
     @app.errorhandler(400)
     def bad_request(e):
-        return render_template("errors/404.html"), 400
+        return render_template("errors/400.html"), 400
 
     @app.errorhandler(403)
     def forbidden(e):

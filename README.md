@@ -101,6 +101,4 @@ git push -u origin main
 ## 📜 License
 
 This project is licensed under the [MIT License](LICENSE).
-=======
-# AI-Resume-Analyzer
->>>>>>> 22be800d5e279191bf6bf762f9b962e13ad20f43
+

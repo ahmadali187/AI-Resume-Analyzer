@@ -24,6 +24,18 @@
 
                     <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Upload & Extract Data</button>
                 </form>
+
+                <hr class="border-secondary my-4">
+
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Want to test without uploading your own file?</p>
+                    <form method="POST" action="{{ url_for('resume.load_sample') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-warning rounded-pill px-4 btn-sm fw-bold">
+                            <i class="fa-solid fa-bolt me-1"></i>⚡ Try Demo Mode (Load Sample Senior Engineer Resume)
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

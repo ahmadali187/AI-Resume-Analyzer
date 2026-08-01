@@ -83,9 +83,16 @@ def compare():
 @reports_bp.route("/<int:report_id>/delete", methods=["POST"])
 @login_required
 def delete(report_id):
-    """Delete report."""
+    """Delete report and clean up generated PDF/DOCX files on disk."""
     report = Report.query.filter_by(id=report_id, user_id=current_user.id).first_or_404()
+    out_dir = Path(current_app.config["REPORT_FOLDER"])
+    for ext in ["pdf", "docx"]:
+        f_path = out_dir / f"report_{report_id}.{ext}"
+        if f_path.exists():
+            try: f_path.unlink()
+            except Exception: pass
+
     db.session.delete(report)
     db.session.commit()
-    flash("Report deleted.", "info")
+    flash("Report deleted successfully.", "info")
     return redirect(url_for("reports.list_reports"))

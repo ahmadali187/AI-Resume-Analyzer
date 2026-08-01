@@ -55,9 +55,13 @@ class ReportGenerator:
                 textColor=colors.HexColor('#334155')
             )
 
+            import html
             # Header
             story.append(Paragraph("AI Resume Analysis & ATS Optimization Report", title_style))
-            story.append(Paragraph(f"Candidate: <b>{user_obj.name}</b> ({user_obj.email}) | File: {resume_obj.filename}", normal_style))
+            c_name = html.escape(str(user_obj.name or 'Candidate'))
+            c_email = html.escape(str(user_obj.email or ''))
+            c_filename = html.escape(str(resume_obj.filename or ''))
+            story.append(Paragraph(f"Candidate: <b>{c_name}</b> ({c_email}) | File: {c_filename}", normal_style))
             story.append(Spacer(1, 10))
             story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#CBD5E1'), spaceAfter=15))
 
@@ -89,7 +93,7 @@ class ReportGenerator:
             # Executive Summary
             story.append(Paragraph("Executive Summary", heading2_style))
             summary_text = report_obj.summary or report_obj.analysis_json.get("executive_summary", "Detailed candidate profile evaluation.")
-            story.append(Paragraph(summary_text, normal_style))
+            story.append(Paragraph(html.escape(str(summary_text)), normal_style))
             story.append(Spacer(1, 10))
 
             # Strengths & Weaknesses
@@ -97,12 +101,12 @@ class ReportGenerator:
             if analysis:
                 story.append(Paragraph("Key Strengths", heading2_style))
                 for s in analysis.get("key_strengths", []):
-                    story.append(Paragraph(f"• {s}", normal_style))
+                    story.append(Paragraph(f"• {html.escape(str(s))}", normal_style))
 
                 story.append(Spacer(1, 10))
                 story.append(Paragraph("Recommended Improvements", heading2_style))
                 for area in analysis.get("improvement_areas", []):
-                    story.append(Paragraph(f"• {area}", normal_style))
+                    story.append(Paragraph(f"• {html.escape(str(area))}", normal_style))
 
             doc.build(story)
             return output_path

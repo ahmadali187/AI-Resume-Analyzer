@@ -1,22 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Cover Letter Generated - {{ app_name }}{% endblock %}
+{% block title %}Cover Letter - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="text-white fw-bold mb-1">Generated Cover Letter</h3>
-            <p class="text-muted small mb-0">Role: {{ cover_letter.job_role }} at {{ cover_letter.company }}</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button onclick="navigator.clipboard.writeText(document.getElementById('letterText').innerText); alert('Cover letter copied to clipboard!');" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-copy me-1"></i>Copy Text</button>
-            <a href="{{ url_for('analysis.cover_letter') }}" class="btn btn-primary-gradient"><i class="fa-solid fa-plus me-1"></i>New Letter</a>
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-file-pen text-primary me-2"></i>Tailored Cover Letter</h3>
+                <p class="text-muted small mb-0 font-mono">Target Role: <strong class="text-info">{{ cover_letter.job_role }}</strong> at <strong class="text-white">{{ cover_letter.company }}</strong></p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-success rounded-pill px-3" onclick="copyLetterContent()">
+                    <i class="fa-solid fa-copy me-1"></i>Copy to Clipboard
+                </button>
+                <button type="button" class="btn btn-outline-info rounded-pill px-3" onclick="downloadLetterText()">
+                    <i class="fa-solid fa-download me-1"></i>Download TXT
+                </button>
+                <a href="{{ url_for('analysis.cover_letter') }}" class="btn btn-primary-gradient rounded-pill px-3">
+                    <i class="fa-solid fa-plus me-1"></i>Create Another
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="glass-card p-4 p-md-5">
-        <div id="letterText" class="text-white lead font-monospace" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.8;">{{ cover_letter.content }}</div>
+    <!-- Live Editable Container -->
+    <div class="glass-card p-4 p-md-5 position-relative">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-30">
+            <span class="badge bg-primary bg-opacity-20 text-primary border border-primary px-3 py-1">
+                <i class="fa-solid fa-pen-to-square me-1"></i>Live Editable Document (Click text below to customize)
+            </span>
+            <span class="text-muted small font-mono" id="charCount">Characters: {{ cover_letter.content|length }}</span>
+        </div>
+
+        <div id="letterText" contenteditable="true" oninput="updateCharCount()" class="text-white font-mono p-3 rounded bg-dark bg-opacity-40 border border-secondary border-opacity-30" style="white-space: pre-wrap; font-size: 1.02rem; line-height: 1.8; outline: none; min-height: 380px;">{{ cover_letter.content }}</div>
     </div>
 </div>
+
+<script>
+function updateCharCount() {
+    const text = document.getElementById("letterText").innerText;
+    document.getElementById("charCount").textContent = "Characters: " + text.length;
+}
+
+function copyLetterContent() {
+    const text = document.getElementById("letterText").innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        alert("Cover letter copied to clipboard!");
+    });
+}
+
+function downloadLetterText() {
+    const text = document.getElementById("letterText").innerText;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Cover_Letter_{{ cover_letter.company|replace(' ', '_') }}.txt";
+    link.click();
+}
+</script>
 {% endblock %}

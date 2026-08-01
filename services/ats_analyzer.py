@@ -55,12 +55,28 @@ class ATSAnalyzer:
             "breakdown": {
                 "word_count": parsed_json.get("word_count", len(resume_text.split())),
                 "action_verb_count": cls._count_action_verbs(resume_text),
-                "skills_count": len(parsed_json.get("skills", [])),
+                "skills_count": cls._get_total_skills_count(parsed_json),
                 "has_contact_info": bool(parsed_json.get("contact_info", {}).get("email")),
                 "has_linkedin": bool(parsed_json.get("contact_info", {}).get("linkedin")),
                 "has_github": bool(parsed_json.get("contact_info", {}).get("github")),
             }
         }
+
+    @classmethod
+    def _get_total_skills_count(cls, parsed: dict) -> int:
+        flat = parsed.get("flat_skills")
+        if isinstance(flat, list) and flat:
+            return len(flat)
+        skills = parsed.get("skills", [])
+        if isinstance(skills, list):
+            return len(skills)
+        elif isinstance(skills, dict):
+            total = 0
+            for sublist in skills.values():
+                if isinstance(sublist, list):
+                    total += len(sublist)
+            return total
+        return 0
 
     @classmethod
     def _score_formatting(cls, text: str, parsed: dict) -> int:
@@ -86,8 +102,7 @@ class ATSAnalyzer:
 
     @classmethod
     def _score_skills(cls, parsed: dict) -> int:
-        skills = parsed.get("skills", [])
-        count = len(skills)
+        count = cls._get_total_skills_count(parsed)
         if count >= 12:
             return 95
         elif count >= 8:

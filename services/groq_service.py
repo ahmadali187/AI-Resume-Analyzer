@@ -118,9 +118,28 @@ class GroqService:
 
     def generate_summary(self, resume_text: str, job_role: str = "") -> str:
         """Generate candidate executive summary."""
-        return ("Results-driven Software Engineer with extensive experience in architecting scalable applications, "
-                "full-stack development, and database design. Proven track record of delivering robust technical solutions "
-                "utilizing modern frameworks and best engineering practices.")
+        if self._has_valid_api_key():
+            try:
+                from groq import Groq
+                client = Groq(api_key=self.api_key)
+                target = f" for a {job_role} role" if job_role else ""
+                prompt = f"Generate a concise 3-sentence executive summary{target} based on this resume:\n{resume_text[:2500]}"
+                response = client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are an Executive Resume Writer."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.4
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                logger.error(f"Groq generate_summary failed: {e}")
+
+        role_title = job_role or "Professional"
+        return (f"Results-driven {role_title} with demonstrated expertise in technical domain areas, full-stack application development, "
+                f"and database design. Proven track record of delivering robust software solutions "
+                f"utilizing modern engineering best practices.")
 
     def parse_resume_with_ai(self, resume_text: str) -> dict:
         """Uses Groq API LLM to extract structured JSON from raw resume text."""
