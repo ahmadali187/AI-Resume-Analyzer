@@ -1,96 +1,132 @@
 {% extends "base.html" %}
 
-{% block title %}ATS Report #{{ report.id }} - {{ app_name }}{% endblock %}
+{% block title %}ATS Optimization Report #{{ report.id }} - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="text-white fw-bold mb-1">ATS Optimization Report</h3>
-            <p class="text-muted small mb-0">File: <strong>{{ resume.filename }}</strong> | Generated: {{ report.created_at.strftime('%B %d, %Y') }}</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('reports.download', report_id=report.id, fmt='pdf') }}" class="btn btn-primary-gradient"><i class="fa-solid fa-file-pdf me-2"></i>Download PDF</a>
-            <a href="{{ url_for('reports.download', report_id=report.id, fmt='md') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-file-code me-1"></i>Markdown</a>
-            <a href="{{ url_for('reports.download', report_id=report.id, fmt='html') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-globe me-1"></i>HTML</a>
+    <!-- Top Action Bar & Header -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-square-poll-vertical text-success me-2"></i>ATS Optimization & Audit Report</h3>
+                <p class="text-muted small mb-0">File: <strong class="text-white font-mono">{{ resume.filename }}</strong> | Generated: {{ report.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
+            </div>
+            <!-- Comprehensive Report Export Suite -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('reports.download', report_id=report.id, fmt='pdf') }}" class="btn btn-primary-gradient px-3">
+                    <i class="fa-solid fa-file-pdf me-1"></i>Download PDF
+                </a>
+                <a href="{{ url_for('reports.download', report_id=report.id, fmt='docx') }}" class="btn btn-outline-info rounded-pill px-3">
+                    <i class="fa-solid fa-file-word me-1"></i>Download DOCX
+                </a>
+                <a href="{{ url_for('reports.download', report_id=report.id, fmt='md') }}" class="btn btn-outline-light rounded-pill px-3">
+                    <i class="fa-solid fa-file-code me-1"></i>Download Markdown
+                </a>
+                <button type="button" class="btn btn-outline-warning rounded-pill px-3" onclick="window.print()">
+                    <i class="fa-solid fa-print me-1"></i>Print Report
+                </button>
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3 text-white" onclick="shareReport()">
+                    <i class="fa-solid fa-share-nodes me-1"></i>Share
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Main Score Badge & Progress Grid -->
+    <!-- Main Score Badge & Breakdown Grid -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="glass-card p-4 text-center h-100 d-flex flex-column justify-content-center">
+        <div class="col-lg-4 col-md-5 col-12">
+            <div class="glass-card p-4 text-center h-100 d-flex flex-column justify-content-center align-items-center">
                 <div class="score-badge {% if report.ats_score >= 80 %}score-high{% elif report.ats_score >= 60 %}score-mid{% else %}score-low{% endif %} mb-3">
                     {{ report.ats_score }}%
                 </div>
-                <h4 class="text-white fw-bold">Overall ATS Score</h4>
-                <p class="text-muted small mb-0">Composite benchmark evaluation</p>
+                <h4 class="text-white fw-bold mb-1">Overall ATS Match Score</h4>
+                <p class="text-muted small mb-3">Enterprise ATS Benchmark Score</p>
+                <div class="d-flex gap-2 flex-wrap justify-content-center">
+                    <a href="{{ url_for('analysis.job_match') }}" class="btn btn-sm btn-outline-warning rounded-pill">
+                        <i class="fa-solid fa-bullseye me-1"></i>Run Job Match
+                    </a>
+                    <a href="{{ url_for('analysis.interview_prep') }}" class="btn btn-sm btn-outline-info rounded-pill">
+                        <i class="fa-solid fa-comments me-1"></i>Interview Prep
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-8">
+        <div class="col-lg-8 col-md-7 col-12">
             <div class="glass-card p-4 h-100">
-                <h5 class="text-white fw-bold mb-4"><i class="fa-solid fa-list-check text-primary me-2"></i>Category Breakdown</h5>
+                <h5 class="text-white fw-bold mb-4"><i class="fa-solid fa-list-check text-primary me-2"></i>Scoring Breakdown & Grammar Audit</h5>
                 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span>Formatting & Structure</span><strong class="text-white">{{ report.formatting_score }}%</strong>
+                        <span>Formatting & Document Structure</span><strong class="text-white">{{ report.formatting_score }}%</strong>
                     </div>
-                    <div class="progress"><div class="progress-bar-custom" style="width: {{ report.formatting_score }}%;"></div></div>
+                    <div class="progress bg-dark" style="height: 10px;"><div class="progress-bar bg-info" style="width: {{ report.formatting_score }}%;"></div></div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span>Technical & Soft Skills</span><strong class="text-white">{{ report.skills_score }}%</strong>
+                        <span>Technical & Core Competencies</span><strong class="text-white">{{ report.skills_score }}%</strong>
                     </div>
-                    <div class="progress"><div class="progress-bar-custom" style="width: {{ report.skills_score }}%;"></div></div>
+                    <div class="progress bg-dark" style="height: 10px;"><div class="progress-bar bg-success" style="width: {{ report.skills_score }}%;"></div></div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span>Experience & Projects</span><strong class="text-white">{{ report.experience_score }}%</strong>
+                        <span>Work Experience & Quantified Impact</span><strong class="text-white">{{ report.experience_score }}%</strong>
                     </div>
-                    <div class="progress"><div class="progress-bar-custom" style="width: {{ report.experience_score }}%;"></div></div>
+                    <div class="progress bg-dark" style="height: 10px;"><div class="progress-bar bg-warning" style="width: {{ report.experience_score }}%;"></div></div>
                 </div>
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between text-muted small mb-1">
                         <span>Keywords & Action Verbs</span><strong class="text-white">{{ report.keywords_score }}%</strong>
                     </div>
-                    <div class="progress"><div class="progress-bar-custom" style="width: {{ report.keywords_score }}%;"></div></div>
+                    <div class="progress bg-dark" style="height: 10px;"><div class="progress-bar bg-primary" style="width: {{ report.keywords_score }}%;"></div></div>
+                </div>
+
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Readability & Grammar Precision</span><strong class="text-white">{{ report.readability_score }}%</strong>
+                    </div>
+                    <div class="progress bg-dark" style="height: 10px;"><div class="progress-bar bg-danger" style="width: {{ report.readability_score }}%;"></div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Executive Summary -->
+    <!-- Executive AI Summary -->
     <div class="glass-card p-4 mb-4">
-        <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-quote-left text-info me-2"></i>Executive AI Feedback</h5>
-        <p class="text-white lead mb-0">{{ report.summary or report.analysis_json.get('executive_summary', 'Evaluation completed.') }}</p>
+        <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-quote-left text-info me-2"></i>Executive AI Summary</h5>
+        <p class="text-light lead mb-0" style="font-size: 16px; line-height: 1.8;">{{ report.summary or report.analysis_json.get('executive_summary', 'Evaluation completed.') }}</p>
     </div>
 
-    <!-- Strengths & Weak Statements -->
+    <!-- Strengths & Recommended Improvements Grid -->
     {% set analysis = report.analysis_json %}
     {% if analysis %}
-    <div class="row g-4">
-        <div class="col-md-6">
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-12">
             <div class="glass-card p-4 h-100">
-                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-thumbs-up text-success me-2"></i>Key Strengths</h5>
-                <ul class="list-unstyled text-muted mb-0">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-thumbs-up text-success me-2"></i>Key Candidate Strengths</h5>
+                <ul class="list-unstyled text-muted mb-0 d-flex flex-column gap-2">
                     {% for item in analysis.get('key_strengths', []) %}
-                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i><span class="text-white">{{ item }}</span></li>
+                    <li class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                        <span class="text-white text-break" style="font-size: 14px;">{{ item }}</span>
+                    </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 col-12">
             <div class="glass-card p-4 h-100">
-                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-wrench text-warning me-2"></i>Recommended Improvements</h5>
-                <ul class="list-unstyled text-muted mb-0">
+                <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-wrench text-warning me-2"></i>Improvement Suggestions</h5>
+                <ul class="list-unstyled text-muted mb-0 d-flex flex-column gap-2">
                     {% for item in analysis.get('improvement_areas', []) %}
-                    <li class="mb-2"><i class="fa-solid fa-arrow-right text-warning me-2"></i><span class="text-white">{{ item }}</span></li>
+                    <li class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-warning mt-1"></i>
+                        <span class="text-white text-break" style="font-size: 14px;">{{ item }}</span>
+                    </li>
                     {% endfor %}
                 </ul>
             </div>
@@ -98,4 +134,20 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+function shareReport() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'ATS Report #{{ report.id }}',
+            text: 'Check out this candidate ATS Analysis Report (Score: {{ report.ats_score }}%)',
+            url: window.location.href
+        }).catch(err => console.log(err));
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Report link copied to clipboard!');
+        });
+    }
+}
+</script>
 {% endblock %}

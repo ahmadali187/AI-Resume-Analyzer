@@ -1,105 +1,206 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Control Panel - {{ app_name }}{% endblock %}
+{% block title %}Admin Dashboard - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-user-shield text-warning me-2"></i>Admin Control Panel</h3>
-            <p class="text-muted small mb-0">System status, user management, and API usage stats</p>
-        </div>
-        <div>
-            {% if api_key_configured %}
-            <span class="badge bg-success border border-success p-2"><i class="fa-solid fa-check-circle me-1"></i>Groq API Configured</span>
-            {% else %}
-            <span class="badge bg-warning text-dark p-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>Running Offline Simulation Fallback</span>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Admin Metric Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="glass-card p-3 d-flex align-items-center gap-3">
-                <div class="metric-round-icon metric-icon-users"><i class="fa-solid fa-users"></i></div>
-                <div>
-                    <h3 class="text-white fw-bold mb-0">{{ total_users }}</h3>
-                    <span class="text-muted small">Registered Users</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="glass-card p-3 d-flex align-items-center gap-3">
-                <div class="metric-round-icon metric-icon-resumes"><i class="fa-solid fa-file-arrow-up"></i></div>
-                <div>
-                    <h3 class="text-white fw-bold mb-0">{{ total_resumes }}</h3>
-                    <span class="text-muted small">Uploaded Resumes</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="glass-card p-3 d-flex align-items-center gap-3">
-                <div class="metric-round-icon metric-icon-reports"><i class="fa-solid fa-file-chart-column"></i></div>
-                <div>
-                    <h3 class="text-white fw-bold mb-0">{{ total_reports }}</h3>
-                    <span class="text-muted small">Reports Generated</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="glass-card p-3 d-flex align-items-center gap-3">
-                <div class="metric-round-icon metric-icon-matches"><i class="fa-solid fa-bullseye"></i></div>
-                <div>
-                    <h3 class="text-white fw-bold mb-0">{{ total_matches }}</h3>
-                    <span class="text-muted small">Job Matches</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Users Table -->
+    <!-- Header -->
     <div class="glass-card p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-white fw-bold mb-0"><i class="fa-solid fa-users text-primary me-2"></i>Recent Registered Users</h5>
-            <a href="{{ url_for('admin.users_list') }}" class="text-primary text-decoration-none small">View All Users</a>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-danger text-uppercase px-3 py-1 fs-6">Admin Panel</span>
+                    <h2 class="text-white fw-bold mb-0" style="font-size: 26px;">Control Center</h2>
+                </div>
+                <p class="text-muted mb-0" style="font-size: 14px;">System health, real-time analytics, storage, API usage, and administrative metrics.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('admin.users_list') }}" class="btn btn-primary-gradient px-3">
+                    <i class="fa-solid fa-users me-1"></i>Manage Users
+                </a>
+                {% if current_user.role == 'SUPER_ADMIN' %}
+                <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-warning rounded-pill px-3">
+                    <i class="fa-solid fa-gears me-1"></i>API & Settings
+                </a>
+                <a href="{{ url_for('admin.logs_list') }}" class="btn btn-outline-info rounded-pill px-3">
+                    <i class="fa-solid fa-clipboard-list me-1"></i>Audit Logs
+                </a>
+                {% endif %}
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
-                <thead>
-                    <tr class="text-muted">
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Admin Status</th>
-                        <th>Joined</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users[:5] %}
-                    <tr>
-                        <td>#{{ u.id }}</td>
-                        <td class="fw-bold text-white">{{ u.name }}</td>
-                        <td>{{ u.email }}</td>
-                        <td>
-                            {% if u.is_admin %}
-                            <span class="badge bg-warning text-dark">Admin</span>
-                            {% else %}
-                            <span class="badge bg-secondary">User</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-muted small">{{ u.created_at.strftime('%b %d, %Y') }}</td>
-                        <td class="text-end">
-                            <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=u.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-warning">Toggle Admin</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    </div>
+
+    <!-- Stat Cards Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="glass-card p-4 text-center h-100">
+                <i class="fa-solid fa-users text-primary fs-3 mb-2"></i>
+                <h3 class="text-white fw-bold mb-1">{{ total_users }}</h3>
+                <span class="text-muted" style="font-size: 13px;">Total Registered Users</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="glass-card p-4 text-center h-100">
+                <i class="fa-solid fa-file-invoice text-info fs-3 mb-2"></i>
+                <h3 class="text-white fw-bold mb-1">{{ total_resumes }}</h3>
+                <span class="text-muted" style="font-size: 13px;">Resumes Uploaded</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="glass-card p-4 text-center h-100">
+                <i class="fa-solid fa-chart-column text-success fs-3 mb-2"></i>
+                <h3 class="text-white fw-bold mb-1">{{ total_reports }}</h3>
+                <span class="text-muted" style="font-size: 13px;">ATS Reports Generated</span>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="glass-card p-4 text-center h-100">
+                <i class="fa-solid fa-bullseye text-warning fs-3 mb-2"></i>
+                <h3 class="text-white fw-bold mb-1">{{ total_matches }}</h3>
+                <span class="text-muted" style="font-size: 13px;">Job Matches Executed</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health & Usage Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-server text-info me-2"></i>System Infrastructure & Health</h4>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between text-light mb-1" style="font-size: 14px;">
+                        <span>CPU Load</span>
+                        <span class="fw-bold">{{ cpu_usage }}%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 10px;">
+                        <div class="progress-bar bg-info" style="width: {{ cpu_usage }}%;"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between text-light mb-1" style="font-size: 14px;">
+                        <span>Memory Load</span>
+                        <span class="fw-bold">{{ memory_usage }}%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 10px;">
+                        <div class="progress-bar bg-warning" style="width: {{ memory_usage }}%;"></div>
+                    </div>
+                </div>
+                <div class="pt-2 border-top border-secondary border-opacity-30 d-flex justify-content-between text-muted" style="font-size: 13px;">
+                    <span><i class="fa-solid fa-hard-drive me-1 text-primary"></i>Upload Storage Used: <strong>{{ storage_mb }} MB</strong></span>
+                    <span><i class="fa-solid fa-user-shield me-1 text-warning"></i>Admins Count: <strong>{{ total_admins }}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-microchip text-warning me-2"></i>AI Provider Integration</h4>
+                <div class="p-3 rounded bg-dark border border-secondary border-opacity-30 mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-white fw-bold mb-0">Groq LLM Service (llama-3.3-70b-versatile)</h6>
+                            <small class="text-muted">Primary ATS Analysis & Content Generator</small>
+                        </div>
+                        {% if groq_key_set %}
+                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Active</span>
+                        {% else %}
+                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-exclamation me-1"></i>Key Missing</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="p-3 rounded bg-dark border border-secondary border-opacity-30">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-white fw-bold mb-0">OpenAI Fallback Engine</h6>
+                            <small class="text-muted">Secondary LLM Engine</small>
+                        </div>
+                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Standby</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Tables (Latest 10 Users & Latest 10 Uploads) -->
+    <div class="row g-4">
+        <!-- Latest 10 Users -->
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-white fw-bold mb-0" style="font-size: 18px;"><i class="fa-solid fa-user-plus text-primary me-2"></i>Latest Registered Users</h4>
+                    <a href="{{ url_for('admin.users_list') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td class="fw-semibold text-white">{{ u.name }}</td>
+                                <td class="text-muted font-mono">{{ u.email }}</td>
+                                <td>
+                                    {% if u.role == 'SUPER_ADMIN' %}
+                                    <span class="badge bg-danger">SUPER ADMIN</span>
+                                    {% elif u.role == 'ADMIN' %}
+                                    <span class="badge bg-warning text-dark">ADMIN</span>
+                                    {% elif u.role == 'RECRUITER' %}
+                                    <span class="badge bg-info">RECRUITER</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">USER</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.is_active %}
+                                    <span class="badge bg-success bg-opacity-20 text-success border border-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger">Blocked</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest 10 Uploads -->
+        <div class="col-lg-6">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-white fw-bold mb-0" style="font-size: 18px;"><i class="fa-solid fa-cloud-arrow-up text-info me-2"></i>Recent Uploads</h4>
+                    <a href="{{ url_for('admin.resumes_list') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>User ID</th>
+                                <th>Format</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in resumes %}
+                            <tr>
+                                <td class="text-white text-truncate" style="max-width: 160px;">{{ r.filename }}</td>
+                                <td class="text-info font-mono">User #{{ r.user_id }}</td>
+                                <td><span class="badge bg-primary text-uppercase">{{ r.file_type }}</span></td>
+                                <td class="text-muted">{{ (r.file_size / 1024)|round(1) }} KB</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>

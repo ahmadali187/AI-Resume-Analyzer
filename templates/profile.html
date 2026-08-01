@@ -4,15 +4,62 @@
 
 {% block content %}
 <div class="container py-4">
+    <!-- Header Banner -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="position-relative">
+                    {% if current_user.photo %}
+                        <img src="{{ url_for('static', filename=current_user.photo) }}" alt="{{ current_user.name }}" class="rounded-circle border border-2 border-primary" style="width: 72px; height: 72px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary bg-opacity-20 border border-primary d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 72px; height: 72px; font-size: 28px;">
+                            {{ current_user.name[:1].upper() }}
+                        </div>
+                    {% endif %}
+                    <span class="position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle p-1" title="Verified Candidate">
+                        <i class="fa-solid fa-check text-white" style="font-size: 10px;"></i>
+                    </span>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h2 class="text-white fw-bold mb-0" style="font-size: 24px;">{{ current_user.name }}</h2>
+                        <span class="badge bg-primary bg-opacity-20 text-primary border border-primary px-2 py-1 rounded-pill" style="font-size: 11px;">
+                            <i class="fa-solid fa-certificate me-1"></i>Verified Candidate
+                        </span>
+                        <span class="badge bg-info bg-opacity-20 text-info border border-info px-2 py-1 rounded-pill" style="font-size: 11px;">
+                            {{ current_user.role }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0 font-mono" style="font-size: 13px;">
+                        <i class="fa-regular fa-envelope me-1"></i>{{ current_user.email }}
+                        <button class="btn btn-link text-info p-0 ms-2 text-decoration-none" onclick="copyToClipboard('{{ current_user.email }}', 'Email copied!')" title="Copy Email">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="#profile-form" class="btn btn-primary-gradient px-3 rounded-pill">
+                    <i class="fa-solid fa-pen-to-square me-1"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Update Profile -->
-        <div class="col-lg-7">
+        <div class="col-lg-7" id="profile-form">
             <div class="glass-card p-4 p-md-5 h-100">
-                <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-id-card text-primary me-2"></i>Profile Information & Career Metadata</h4>
-                <form method="POST" action="{{ url_for('auth.profile') }}">
+                <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-id-card text-primary me-2"></i>Profile Details & Career Info</h4>
+                <form method="POST" action="{{ url_for('auth.profile') }}" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <div class="row g-3">
+                        <div class="col-12 mb-2">
+                            <label class="form-label text-light">Profile Photo / Avatar</label>
+                            <input type="file" name="photo" class="form-control bg-dark text-white border-secondary" accept="image/png, image/jpeg, image/webp">
+                            <span class="text-muted" style="font-size: 12px;">Allowed formats: PNG, JPG, WEBP</span>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-light">Full Name</label>
                             <input type="text" name="name" value="{{ current_user.name }}" class="form-control bg-dark text-white border-secondary" required>
@@ -34,16 +81,41 @@
                             <input type="text" name="preferred_role" value="{{ current_user.preferred_role or '' }}" placeholder="e.g. Lead Backend Engineer" class="form-control bg-dark text-white border-secondary">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label text-light">Key Skills (comma separated)</label>
+                            <input type="text" name="skills" value="{{ current_user.skills_str or '' }}" placeholder="Python, Flask, React, PostgreSQL" class="form-control bg-dark text-white border-secondary">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label text-light">Portfolio Website</label>
-                            <input type="url" name="portfolio" value="{{ current_user.portfolio or '' }}" placeholder="https://myportfolio.com" class="form-control bg-dark text-white border-secondary">
+                            <div class="input-group">
+                                <input type="url" id="portfolio-field" name="portfolio" value="{{ current_user.portfolio or '' }}" placeholder="https://portfolio.com" class="form-control bg-dark text-white border-secondary">
+                                {% if current_user.portfolio %}
+                                <button class="btn btn-outline-secondary text-info" type="button" onclick="copyToClipboard('{{ current_user.portfolio }}', 'Portfolio URL copied!')">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label text-light">GitHub Profile</label>
-                            <input type="url" name="github" value="{{ current_user.github or '' }}" placeholder="https://github.com/username" class="form-control bg-dark text-white border-secondary">
+                            <div class="input-group">
+                                <input type="url" id="github-field" name="github" value="{{ current_user.github or '' }}" placeholder="https://github.com/user" class="form-control bg-dark text-white border-secondary">
+                                {% if current_user.github %}
+                                <button class="btn btn-outline-secondary text-info" type="button" onclick="copyToClipboard('{{ current_user.github }}', 'GitHub URL copied!')">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label text-light">LinkedIn Profile</label>
-                            <input type="url" name="linkedin" value="{{ current_user.linkedin or '' }}" placeholder="https://linkedin.com/in/username" class="form-control bg-dark text-white border-secondary">
+                            <div class="input-group">
+                                <input type="url" id="linkedin-field" name="linkedin" value="{{ current_user.linkedin or '' }}" placeholder="https://linkedin.com/in/user" class="form-control bg-dark text-white border-secondary">
+                                {% if current_user.linkedin %}
+                                <button class="btn btn-outline-secondary text-info" type="button" onclick="copyToClipboard('{{ current_user.linkedin }}', 'LinkedIn URL copied!')">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label text-light">Executive Bio / Summary</label>
@@ -51,12 +123,12 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill fw-bold mt-2"><i class="fa-solid fa-floppy-disk me-2"></i>Save Profile Metadata</button>
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill fw-bold mt-2"><i class="fa-solid fa-floppy-disk me-2"></i>Save Profile Information</button>
                 </form>
             </div>
         </div>
 
-        <!-- Change Password & Preferences -->
+        <!-- Change Password & Security -->
         <div class="col-lg-5">
             <div class="glass-card p-4 p-md-5 h-100">
                 <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-key text-warning me-2"></i>Security & Credentials</h4>
@@ -80,4 +152,13 @@
         </div>
     </div>
 </div>
+
+<script>
+function copyToClipboard(text, msg) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function() {
+        alert(msg);
+    });
+}
+</script>
 {% endblock %}

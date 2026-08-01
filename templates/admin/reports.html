@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}ATS Reports Admin Registry - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h2 class="text-white fw-bold mb-1" style="font-size: 24px;"><i class="fa-solid fa-chart-column text-success me-2"></i>Global ATS Reports Registry</h2>
+                <p class="text-muted mb-0" style="font-size: 13px;">View and moderate generated ATS reports.</p>
+            </div>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-outline-light rounded-pill px-3">
+                <i class="fa-solid fa-arrow-left me-1"></i>Back to Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>User ID</th>
+                        <th>Resume ID</th>
+                        <th>ATS Score</th>
+                        <th>Created At</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td class="font-mono text-muted">#{{ report.id }}</td>
+                        <td class="text-info font-mono">User #{{ report.user_id }}</td>
+                        <td class="font-mono">Resume #{{ report.resume_id }}</td>
+                        <td>
+                            <span class="badge {% if report.ats_score >= 80 %}bg-success{% elif report.ats_score >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %} px-3 py-1 font-mono fs-6">
+                                {{ report.ats_score }}%
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="text-end">
+                            <form method="POST" action="{{ url_for('admin.delete_report', report_id=report.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete report #{{ report.id }}?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-trash me-1"></i>Delete Report
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No ATS reports generated yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagination and pagination.pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <span class="text-muted" style="font-size: 13px;">Showing page {{ pagination.page }} of {{ pagination.pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.reports_list', page=pagination.prev_num) }}">Previous</a></li>
+                {% endif %}
+                {% if pagination.has_next %}
+                <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ url_for('admin.reports_list', page=pagination.next_num) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

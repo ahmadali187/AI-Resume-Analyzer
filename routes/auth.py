@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+import os
+from pathlib import Path
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
 from extensions import db
 from models.user import User
+from models.admin_log import AdminLog
+from utils.security import sanitize_input
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -12,8 +17,8 @@ def register():
         return redirect(url_for("dashboard.index"))
 
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip().lower()
+        name = sanitize_input(request.form.get("name", ""))
+        email = sanitize_input(request.form.get("email", "")).lower()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
@@ -34,13 +39,19 @@ def register():
             flash("An account with this email already exists.", "warning")
             return render_template("auth/register.html")
 
-        # Create user (first registered user becomes admin)
-        is_first_user = User.query.count() == 0
-        user = User(name=name, email=email, is_admin=is_first_user)
+        # STRICT RULE: Registration ALWAYS creates role = User.ROLE_USER
+        user = User(
+            name=name,
+            email=email,
+            role=User.ROLE_USER,
+            is_active=True
+        )
         user.set_password(password)
 
         db.session.add(user)
         db.session.commit()
+
+        AdminLog.log("REGISTER", user_id=user.id, details=f"User {email} registered", ip_address=request.remote_addr)
 
         flash("Registration successful! You can now log in.", "success")
         return redirect(url_for("auth.login"))
@@ -54,7 +65,7 @@ def login():
         return redirect(url_for("dashboard.index"))
 
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        email = sanitize_input(request.form.get("email", "")).lower()
         password = request.form.get("password", "")
         remember = bool(request.form.get("remember"))
 
@@ -64,7 +75,13 @@ def login():
             flash("Invalid email or password.", "danger")
             return render_template("auth/login.html")
 
+        if not user.is_active:
+            flash("Your account has been deactivated. Please contact support.", "danger")
+            return render_template("auth/login.html")
+
         login_user(user, remember=remember)
+        AdminLog.log("LOGIN", user_id=user.id, details=f"User {user.email} logged in", ip_address=request.remote_addr)
+
         next_page = request.args.get("next")
         flash(f"Welcome back, {user.name}!", "success")
         return redirect(next_page or url_for("dashboard.index"))
@@ -75,6 +92,7 @@ def login():
 @auth_bp.route("/logout")
 @login_required
 def logout():
+    AdminLog.log("LOGOUT", user_id=current_user.id, details=f"User {current_user.email} logged out", ip_address=request.remote_addr)
     logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
@@ -84,8 +102,8 @@ def logout():
 @login_required
 def profile():
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip().lower()
+        name = sanitize_input(request.form.get("name", ""))
+        email = sanitize_input(request.form.get("email", "")).lower()
 
         if not name or not email:
             flash("Name and email are required.", "danger")
@@ -98,13 +116,27 @@ def profile():
 
         current_user.name = name
         current_user.email = email
-        current_user.job_title = request.form.get("job_title", "").strip()
-        current_user.location = request.form.get("location", "").strip()
-        current_user.portfolio = request.form.get("portfolio", "").strip()
-        current_user.github = request.form.get("github", "").strip()
-        current_user.linkedin = request.form.get("linkedin", "").strip()
-        current_user.preferred_role = request.form.get("preferred_role", "").strip()
-        current_user.bio = request.form.get("bio", "").strip()
+        current_user.job_title = sanitize_input(request.form.get("job_title", ""))
+        current_user.location = sanitize_input(request.form.get("location", ""))
+        current_user.portfolio = sanitize_input(request.form.get("portfolio", ""))
+        current_user.github = sanitize_input(request.form.get("github", ""))
+        current_user.linkedin = sanitize_input(request.form.get("linkedin", ""))
+        current_user.preferred_role = sanitize_input(request.form.get("preferred_role", ""))
+        current_user.bio = sanitize_input(request.form.get("bio", ""))
+        current_user.skills_str = sanitize_input(request.form.get("skills", ""))
+
+        # Profile photo upload handler
+        if "photo" in request.files:
+            file = request.files["photo"]
+            if file and file.filename:
+                ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+                if ext in ["png", "jpg", "jpeg", "webp"]:
+                    filename = secure_filename(f"user_{current_user.id}_avatar.{ext}")
+                    upload_dir = Path(current_app.config["UPLOAD_FOLDER"]) / "avatars"
+                    upload_dir.mkdir(parents=True, exist_ok=True)
+                    saved_path = upload_dir / filename
+                    file.save(saved_path)
+                    current_user.photo = f"avatars/{filename}"
 
         db.session.commit()
 
@@ -135,6 +167,7 @@ def change_password():
 
     current_user.set_password(new_password)
     db.session.commit()
+    AdminLog.log("CHANGE_PASSWORD", user_id=current_user.id, details="Changed password", ip_address=request.remote_addr)
 
     flash("Password changed successfully!", "success")
     return redirect(url_for("auth.profile"))
@@ -143,7 +176,7 @@ def change_password():
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        email = sanitize_input(request.form.get("email", "")).lower()
         user = User.query.filter_by(email=email).first()
         if user:
             flash("Password reset instructions have been sent to your email (simulated).", "info")

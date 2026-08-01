@@ -28,7 +28,11 @@ def create_app(config_name=None):
     for blueprint, url_prefix in blueprints:
         app.register_blueprint(blueprint, url_prefix=url_prefix)
 
-    # Register CLI commands and context processors
+    # Register CLI commands
+    from cli import init_cli
+    init_cli(app)
+
+    # Register Context Processors
     @app.context_processor
     def inject_globals():
         return {
@@ -59,7 +63,7 @@ def create_app(config_name=None):
 
     @app.errorhandler(403)
     def forbidden(e):
-        return render_template("errors/404.html"), 403
+        return render_template("errors/403.html"), 403
 
     @app.errorhandler(404)
     def page_not_found(e):
@@ -82,4 +86,3 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h2 class="text-white fw-bold mb-1" style="font-size: 24px;"><i class="fa-solid fa-gears text-warning me-2"></i>System Settings & API Configuration</h2>
+                <p class="text-muted mb-0" style="font-size: 13px;">Manage global API keys, LLM models, and enterprise configuration settings.</p>
+            </div>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-outline-light rounded-pill px-3">
+                <i class="fa-solid fa-arrow-left me-1"></i>Back to Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card p-4 p-md-5">
+                <h4 class="text-white fw-bold mb-4"><i class="fa-solid fa-key text-primary me-2"></i>Groq AI Integration Settings</h4>
+                <form method="POST" action="{{ url_for('admin.settings') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-light">Groq API Key</label>
+                        <input type="password" name="groq_api_key" value="{{ groq_api_key }}" placeholder="gsk_..." class="form-control bg-dark text-white border-secondary">
+                        <span class="text-muted" style="font-size: 12px;">Used for ATS parsing, job matching, cover letter, and interview prep.</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-light">Default Groq LLM Model</label>
+                        <select name="groq_model" class="form-select bg-dark text-white border-secondary">
+                            <option value="llama-3.3-70b-versatile" {% if groq_model == 'llama-3.3-70b-versatile' %}selected{% endif %}>llama-3.3-70b-versatile (Recommended)</option>
+                            <option value="llama-3.1-8b-instant" {% if groq_model == 'llama-3.1-8b-instant' %}selected{% endif %}>llama-3.1-8b-instant (Fast)</option>
+                            <option value="mixtral-8x7b-32768" {% if groq_model == 'mixtral-8x7b-32768' %}selected{% endif %}>mixtral-8x7b-32768</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Save API Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card p-4 h-100">
+                <h4 class="text-white fw-bold mb-3"><i class="fa-solid fa-shield-cat text-warning me-2"></i>Security Policy</h4>
+                <ul class="list-unstyled text-muted d-flex flex-column gap-3 mb-0" style="font-size: 13px;">
+                    <li class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-check text-success mt-1"></i>
+                        <span>Only <strong>SUPER_ADMIN</strong> users can alter system settings or view logs.</span>
+                    </li>
+                    <li class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-check text-success mt-1"></i>
+                        <span>All API Key updates are logged to the permanent audit record.</span>
+                    </li>
+                    <li class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-check text-success mt-1"></i>
+                        <span>API keys are stored in server memory and sanitized before rendering.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

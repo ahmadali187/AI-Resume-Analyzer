@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, Response, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db
 from models.resume import Resume
 from utils.validators import validate_file
+from utils.security import sanitize_input, scan_file_for_threats
 from services.resume_parser import ResumeParser
 
 resume_bp = Blueprint("resume", __name__)
@@ -34,6 +35,15 @@ def upload():
 
         saved_path = upload_dir / f"user_{current_user.id}_{filename}"
         file.save(saved_path)
+
+        # Threat scan
+        is_clean, scan_msg = scan_file_for_threats(str(saved_path))
+        if not is_clean:
+            if saved_path.exists():
+                saved_path.unlink()
+            flash(f"Security validation failed: {scan_msg}", "danger")
+            return render_template("upload.html")
+
         file_size = saved_path.stat().st_size
 
         try:
@@ -83,6 +93,84 @@ def detail(resume_id):
     """View detailed parsed resume information."""
     resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
     return render_template("resume_detail.html", resume=resume)
+
+
+@resume_bp.route("/<int:resume_id>/rename", methods=["POST"])
+@login_required
+def rename(resume_id):
+    """Rename an existing uploaded resume."""
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    new_name = sanitize_input(request.form.get("filename", "")).strip()
+
+    if new_name:
+        if not new_name.endswith(f".{resume.file_type}"):
+            new_name = f"{new_name}.{resume.file_type}"
+        resume.filename = secure_filename(new_name)
+        db.session.commit()
+        flash("Resume renamed successfully.", "success")
+    else:
+        flash("Filename cannot be empty.", "warning")
+
+    return redirect(url_for("resume.detail", resume_id=resume.id))
+
+
+@resume_bp.route("/<int:resume_id>/replace", methods=["POST"])
+@login_required
+def replace(resume_id):
+    """Replace document file of an existing resume."""
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+
+    if "file" not in request.files:
+        flash("No file selected.", "danger")
+        return redirect(url_for("resume.detail", resume_id=resume.id))
+
+    file = request.files["file"]
+    is_valid, err_msg = validate_file(file)
+    if not is_valid:
+        flash(err_msg, "danger")
+        return redirect(url_for("resume.detail", resume_id=resume.id))
+
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit(".", 1)[1].lower()
+    upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
+
+    # Remove old file if exists
+    if os.path.exists(resume.filepath):
+        try:
+            os.remove(resume.filepath)
+        except Exception:
+            pass
+
+    saved_path = upload_dir / f"user_{current_user.id}_{filename}"
+    file.save(saved_path)
+
+    raw_text = ResumeParser.extract_text(str(saved_path), ext)
+    parsed_data = ResumeParser.parse_resume(raw_text)
+
+    resume.filename = filename
+    resume.filepath = str(saved_path)
+    resume.file_type = ext
+    resume.file_size = saved_path.stat().st_size
+    resume.raw_text = raw_text
+    resume.parsed_json = parsed_data
+
+    db.session.commit()
+    flash("Resume replaced and re-analyzed successfully!", "success")
+    return redirect(url_for("resume.detail", resume_id=resume.id))
+
+
+@resume_bp.route("/<int:resume_id>/preview")
+@login_required
+def preview(resume_id):
+    """Preview document text or download stream."""
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    return jsonify({
+        "id": resume.id,
+        "filename": resume.filename,
+        "file_type": resume.file_type,
+        "uploaded_at": resume.uploaded_at.strftime('%b %d, %Y'),
+        "raw_text": resume.raw_text[:3000] if resume.raw_text else "No preview content available."
+    })
 
 
 @resume_bp.route("/<int:resume_id>/delete", methods=["POST"])
@@ -158,8 +246,6 @@ def compare():
 def export(resume_id, fmt):
     """Export parsed resume in JSON, Markdown, or HTML format."""
     import json
-    from flask import Response
-    
     resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
     pdata = resume.parsed_json or {}
     contact = pdata.get("contact_info", {})

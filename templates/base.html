@@ -26,9 +26,9 @@
     <nav class="navbar navbar-expand-lg glass-nav sticky-top navbar-dark">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" class="brand-logo-img" style="height: 48px; width: 48px; object-fit: cover; border-radius: 12px; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8)); transition: transform 0.3s ease;">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="AI Resume Analyzer Logo" class="brand-logo-img" style="height: 44px; width: 44px; object-fit: cover; border-radius: 12px; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.8));">
                 <span class="brand-text-title fs-5">AI Resume Analyzer</span>
-                <span class="brand-badge-ai">PRO</span>
+                <span class="brand-badge-ai badge bg-primary bg-opacity-30 text-primary border border-primary px-2 py-0" style="font-size: 10px;">PRO</span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -36,21 +36,34 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-link navbar-nav ms-auto align-items-center gap-2">
                     {% if current_user.is_authenticated %}
+                        <li class="nav-item me-2">
+                            <form method="GET" action="{{ url_for('search.search') }}" class="d-flex align-items-center">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" name="q" placeholder="Global search..." class="form-control bg-dark text-white border-secondary rounded-pill-start" style="font-size: 12px; width: 150px;">
+                                    <button class="btn btn-outline-secondary text-light rounded-pill-end" type="submit"><i class="fa-solid fa-magnifying-glass" style="font-size: 12px;"></i></button>
+                                </div>
+                            </form>
+                        </li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-gauge me-1"></i>Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('resume.upload') }}"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Upload</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.job_match') }}"><i class="fa-solid fa-bullseye me-1"></i>Job Match</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.cover_letter') }}"><i class="fa-solid fa-file-pen me-1"></i>Cover Letter</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.interview_prep') }}"><i class="fa-solid fa-comments me-1"></i>Interview Prep</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('reports.list_reports') }}"><i class="fa-solid fa-chart-column me-1"></i>Reports</a></li>
-                        {% if current_user.is_admin %}
+                        {% if current_user.can_view_admin_panel() %}
                             <li class="nav-item"><a class="nav-link text-warning fw-semibold" href="{{ url_for('admin.index') }}"><i class="fa-solid fa-user-shield me-1"></i>Admin</a></li>
                         {% endif %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle btn btn-outline-light btn-sm rounded-pill px-3 ms-2" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fa-solid fa-user-circle me-1"></i>{{ current_user.name }}
+                            <a class="nav-link dropdown-toggle btn btn-outline-light btn-sm rounded-pill px-3 ms-2 d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                {% if current_user.photo %}
+                                <img src="{{ url_for('static', filename=current_user.photo) }}" class="rounded-circle" style="width: 22px; height: 22px; object-fit: cover;">
+                                {% else %}
+                                <i class="fa-solid fa-user-circle"></i>
+                                {% endif %}
+                                <span>{{ current_user.name }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark glass-card">
-                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-id-card me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-id-card me-2"></i>Profile & Credentials</a></li>
                                 <li><hr class="dropdown-divider border-secondary"></li>
                                 <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
                             </ul>
@@ -86,7 +99,7 @@
     <!-- Footer -->
     <footer class="glass-nav py-4 mt-auto border-top border-secondary">
         <div class="container text-center text-muted">
-            <p class="mb-0">&copy; 2026 AI Resume Analyzer</p>
+            <p class="mb-0">&copy; 2026 AI Resume Analyzer & ATS Optimizer</p>
         </div>
     </footer>
 

@@ -5,6 +5,7 @@ from routes.resume import resume_bp
 from routes.analysis import analysis_bp
 from routes.reports import reports_bp
 from routes.admin import admin_bp
+from routes.search import search_bp
 
 blueprints = [
     (main_bp, ""),
@@ -14,4 +15,5 @@ blueprints = [
     (analysis_bp, "/analysis"),
     (reports_bp, "/reports"),
     (admin_bp, "/admin"),
+    (search_bp, ""),
 ]

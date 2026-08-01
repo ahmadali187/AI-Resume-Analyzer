@@ -4,56 +4,96 @@
 
 {% block content %}
 <div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-clipboard-question text-warning me-2"></i>Tailored Interview Preparation</h3>
-            <p class="text-muted small mb-0">Role: {{ prep.job_role or 'Software Engineer' }}</p>
+    <!-- Header & Expand/Collapse Controls -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h3 class="text-white fw-bold mb-1"><i class="fa-solid fa-clipboard-question text-warning me-2"></i>Tailored Interview Preparation</h3>
+                <span class="text-muted font-mono" style="font-size: 13px;">Target Role: <strong class="text-info">{{ prep.job_role or 'Software Engineer' }}</strong></span>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-info rounded-pill px-3" onclick="toggleAccordion(true)">
+                    <i class="fa-solid fa-angles-down me-1"></i>Expand All
+                </button>
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3 text-white" onclick="toggleAccordion(false)">
+                    <i class="fa-solid fa-angles-up me-1"></i>Collapse All
+                </button>
+                <button type="button" class="btn btn-outline-light rounded-pill px-3" onclick="window.print()">
+                    <i class="fa-solid fa-file-pdf me-1"></i>Download / Print PDF
+                </button>
+                <a href="{{ url_for('analysis.interview_prep') }}" class="btn btn-primary-gradient rounded-pill px-3">
+                    <i class="fa-solid fa-rotate-left me-1"></i>New Role
+                </a>
+            </div>
         </div>
-        <a href="{{ url_for('analysis.interview_prep') }}" class="btn btn-outline-light rounded-pill"><i class="fa-solid fa-rotate-left me-1"></i>New Role</a>
     </div>
 
     {% set questions = prep.questions_json %}
     {% if questions %}
-    <div class="accordion glass-card p-4 mb-4" id="interviewAccordion">
+    <div class="accordion mb-4" id="interviewAccordion">
         {% for q in questions %}
         {% set q_num = (batch_offset|default(0) * 5) + loop.index %}
-        <div class="accordion-item bg-transparent border-0 mb-3">
+        {% set diff_lower = (q.difficulty|default('medium'))|lower %}
+        {% set cat_lower = (q.category|default('technical'))|lower %}
+        <div class="accordion-item glass-card border-secondary border-opacity-30 mb-3 overflow-hidden">
             <h2 class="accordion-header" id="heading{{ loop.index }}">
-                <button class="accordion-button collapsed bg-dark text-white rounded-3 border border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
-                    <div class="d-flex align-items-center justify-content-between w-100 me-3">
-                        <span class="fw-bold fs-6">#{{ q_num }} {{ q.question }}</span>
-                        <div class="d-flex gap-2">
-                            <span class="badge bg-primary text-uppercase">{{ q.category }}</span>
-                            <span class="badge bg-secondary text-uppercase">{{ q.difficulty }}</span>
+                <button class="accordion-button collapsed bg-dark text-white p-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                    <div class="d-flex align-items-center justify-content-between w-100 me-3 flex-wrap gap-2">
+                        <span class="fw-bold fs-6 text-break">#{{ q_num }} {{ q.question }}</span>
+                        <div class="d-flex gap-2 flex-wrap ms-auto">
+                            <!-- Category Badge -->
+                            <span class="badge bg-info bg-opacity-20 text-info border border-info px-2 py-1 text-uppercase" style="font-size: 11px;">
+                                <i class="fa-solid fa-layer-group me-1"></i>{{ q.category }}
+                            </span>
+                            <!-- Difficulty Badge -->
+                            <span class="badge {% if 'easy' in diff_lower %}bg-success{% elif 'hard' in diff_lower %}bg-danger{% else %}bg-warning text-dark{% endif %} px-2 py-1 text-uppercase" style="font-size: 11px;">
+                                <i class="fa-solid fa-gauge-high me-1"></i>{{ q.difficulty }}
+                            </span>
                         </div>
                     </div>
                 </button>
             </h2>
             <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#interviewAccordion">
-                <div class="accordion-body bg-dark bg-opacity-75 text-muted rounded-bottom border border-top-0 border-secondary mt-1 p-3">
-                    <strong class="text-success d-block mb-2"><i class="fa-solid fa-circle-check me-1"></i>Ideal Answer Guidance:</strong>
-                    <p class="mb-0 text-white-50 fs-6" style="white-space: pre-wrap; line-height: 1.7;">{{ q.ideal_answer }}</p>
+                <div class="accordion-body bg-dark bg-opacity-75 text-light p-4 border-top border-secondary border-opacity-30">
+                    <div class="mb-3">
+                        <strong class="text-success d-block mb-2 fs-6"><i class="fa-solid fa-circle-check me-2"></i>Ideal Answer & STAR Framework:</strong>
+                        <p class="mb-0 text-white-50 text-break" style="white-space: pre-wrap; line-height: 1.8; font-size: 15px;">{{ q.ideal_answer }}</p>
+                    </div>
+
+                    <!-- Question Toolbar Actions -->
+                    <div class="pt-3 border-top border-secondary border-opacity-30 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" onclick="copyText('{{ q.question }}', 'Question copied!')">
+                                <i class="fa-regular fa-copy me-1"></i>Copy Question
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="copyText('{{ q.ideal_answer }}', 'Answer copied!')">
+                                <i class="fa-regular fa-copy me-1"></i>Copy Answer
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" onclick="toggleFavorite(this)">
+                                <i class="fa-regular fa-star me-1"></i>Save Favorite
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Action Buttons Row (1. Next Questions, 2. End Session) -->
+    <!-- Action Buttons Row -->
     <div class="glass-card p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
         <form method="POST" action="{{ url_for('analysis.interview_prep') }}" class="mb-0">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="resume_id" value="{{ resume_id or prep.resume_id }}">
             <input type="hidden" name="job_role" value="{{ job_role or prep.job_role }}">
             <input type="hidden" name="batch_offset" value="{{ batch_offset or 0 }}">
-            <button type="submit" name="action" value="next_questions" class="btn btn-primary-gradient px-4 py-2 rounded-pill fw-bold fs-6">
-                <i class="fa-solid fa-angles-right me-2"></i>Next Questions
+            <button type="submit" name="action" value="next_questions" class="btn btn-primary-gradient px-4 py-2 rounded-pill fw-bold">
+                <i class="fa-solid fa-angles-right me-2"></i>Generate Next 5 Questions
             </button>
         </form>
 
-        <a href="{{ url_for('main.index') }}" class="btn btn-outline-danger px-4 py-2 rounded-pill fw-bold fs-6">
-            <i class="fa-solid fa-power-off me-2"></i>End Session
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-light px-4 py-2 rounded-pill fw-bold">
+            <i class="fa-solid fa-house me-2"></i>Return to Dashboard
         </a>
     </div>
 
@@ -61,4 +101,40 @@
     <div class="glass-card p-5 text-center text-muted">No questions available.</div>
     {% endif %}
 </div>
+
+<script>
+function toggleAccordion(expand) {
+    const collapses = document.querySelectorAll('#interviewAccordion .accordion-collapse');
+    collapses.forEach(el => {
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(el, {toggle: false});
+        if (expand) {
+            bsCollapse.show();
+        } else {
+            bsCollapse.hide();
+        }
+    });
+}
+
+function copyText(str, msg) {
+    if (!str) return;
+    navigator.clipboard.writeText(str).then(function() {
+        alert(msg);
+    });
+}
+
+function toggleFavorite(btn) {
+    const icon = btn.querySelector('i');
+    if (icon.classList.contains('fa-regular')) {
+        icon.classList.remove('fa-regular');
+        icon.classList.add('fa-solid', 'text-warning');
+        btn.classList.add('btn-warning', 'text-dark');
+        btn.classList.remove('btn-outline-warning');
+    } else {
+        icon.classList.remove('fa-solid', 'text-warning');
+        icon.classList.add('fa-regular');
+        btn.classList.remove('btn-warning', 'text-dark');
+        btn.classList.add('btn-outline-warning');
+    }
+}
+</script>
 {% endblock %}

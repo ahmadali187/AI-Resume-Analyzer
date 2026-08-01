@@ -29,21 +29,25 @@ def view_report(report_id):
 @reports_bp.route("/<int:report_id>/download/<fmt>")
 @login_required
 def download(report_id, fmt):
-    """Download report as PDF, Markdown, or HTML."""
+    """Download report as PDF, DOCX, Markdown, or HTML."""
     report = Report.query.filter_by(id=report_id, user_id=current_user.id).first_or_404()
     resume = Resume.query.get(report.resume_id)
 
     fmt_lower = fmt.lower()
+    out_dir = Path(current_app.config["REPORT_FOLDER"])
+    out_dir.mkdir(exist_ok=True, parents=True)
 
     if fmt_lower == "pdf":
-        out_dir = Path(current_app.config["REPORT_FOLDER"])
-        out_dir.mkdir(exist_ok=True, parents=True)
         pdf_path = out_dir / f"report_{report.id}.pdf"
-        
         ReportGenerator.generate_pdf(report, resume, current_user, pdf_path)
         return send_file(pdf_path, as_attachment=True, download_name=f"ATS_Report_{resume.filename}.pdf")
 
-    elif fmt_lower == "md":
+    elif fmt_lower == "docx":
+        docx_path = out_dir / f"report_{report.id}.docx"
+        ReportGenerator.generate_docx(report, resume, current_user, docx_path)
+        return send_file(docx_path, as_attachment=True, download_name=f"ATS_Report_{resume.filename}.docx")
+
+    elif fmt_lower in ["md", "markdown"]:
         md_text = ReportGenerator.generate_markdown(report, resume, current_user)
         return Response(
             md_text,

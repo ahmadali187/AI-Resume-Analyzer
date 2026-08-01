@@ -3,6 +3,7 @@ from models.resume import Resume
 from models.report import Report
 from models.job import JobDescription, JobMatch
 from models.tool_outputs import CoverLetter, InterviewPrep
+from models.admin_log import AdminLog
 
 __all__ = [
     "User",
@@ -12,4 +13,5 @@ __all__ = [
     "JobMatch",
     "CoverLetter",
     "InterviewPrep",
+    "AdminLog",
 ]

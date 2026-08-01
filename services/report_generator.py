@@ -5,7 +5,7 @@ from utils.logger import logger
 
 
 class ReportGenerator:
-    """Generates PDF, Markdown, and HTML reports for ATS Analysis."""
+    """Generates PDF, DOCX, Markdown, and HTML reports for ATS Analysis."""
 
     @classmethod
     def generate_pdf(cls, report_obj, resume_obj, user_obj, output_path: Path) -> Path:
@@ -108,6 +108,53 @@ class ReportGenerator:
             return output_path
         except Exception as e:
             logger.error(f"Failed to generate PDF report: {e}")
+            raise e
+
+    @classmethod
+    def generate_docx(cls, report_obj, resume_obj, user_obj, output_path: Path) -> Path:
+        """Generate Word DOCX report using python-docx."""
+        try:
+            import docx
+            doc = docx.Document()
+            doc.add_heading("AI Resume Analysis & ATS Optimization Report", 0)
+            doc.add_paragraph(f"Candidate: {user_obj.name} ({user_obj.email})")
+            doc.add_paragraph(f"Resume File: {resume_obj.filename}")
+
+            doc.add_heading("ATS Score Breakdown", level=1)
+            t = doc.add_table(rows=1, cols=2)
+            hdr_cells = t.rows[0].cells
+            hdr_cells[0].text = 'Metric'
+            hdr_cells[1].text = 'Score'
+
+            scores = [
+                ("Overall ATS Score", f"{report_obj.ats_score}%"),
+                ("Formatting Score", f"{report_obj.formatting_score}%"),
+                ("Skills Score", f"{report_obj.skills_score}%"),
+                ("Experience Score", f"{report_obj.experience_score}%"),
+                ("Keywords Score", f"{report_obj.keywords_score}%"),
+                ("Readability Score", f"{report_obj.readability_score}%")
+            ]
+            for m, s in scores:
+                row_cells = t.add_row().cells
+                row_cells[0].text = m
+                row_cells[1].text = s
+
+            analysis = report_obj.analysis_json
+            doc.add_heading("Executive Summary", level=1)
+            doc.add_paragraph(report_obj.summary or analysis.get("executive_summary", ""))
+
+            doc.add_heading("Key Strengths", level=1)
+            for s in analysis.get("key_strengths", []):
+                doc.add_paragraph(s, style='List Bullet')
+
+            doc.add_heading("Recommended Improvements", level=1)
+            for imp in analysis.get("improvement_areas", []):
+                doc.add_paragraph(imp, style='List Bullet')
+
+            doc.save(str(output_path))
+            return output_path
+        except Exception as e:
+            logger.error(f"Failed to generate DOCX report: {e}")
             raise e
 
     @classmethod

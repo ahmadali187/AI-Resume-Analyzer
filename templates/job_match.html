@@ -5,44 +5,109 @@
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-lg-9 col-12">
             <div class="glass-card p-4 p-md-5">
-                <h3 class="text-white fw-bold mb-2 text-center"><i class="fa-solid fa-bullseye text-warning me-2"></i>Job Description Matcher</h3>
-                <p class="text-muted text-center small mb-4">Paste the target Job Description to compare candidate match % and discover missing skills.</p>
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-20 text-warning rounded-circle p-3 mb-2" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-bullseye fs-2"></i>
+                    </div>
+                    <h3 class="text-white fw-bold mb-1">Job Description Matcher</h3>
+                    <p class="text-muted small mb-0">Compare your candidate resume against target Job Description requirements and discover skill gaps.</p>
+                </div>
 
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
-                    <div class="mb-3">
-                        <label class="form-label text-light">Select Candidate Resume</label>
-                        <select name="resume_id" class="form-select" required>
-                            <option value="" disabled selected>-- Choose uploaded resume --</option>
-                            {% for r in resumes %}
-                            <option value="{{ r.id }}">{{ r.filename }} (Uploaded {{ r.uploaded_at.strftime('%b %d') }})</option>
-                            {% endfor %}
-                        </select>
+                    <!-- Searchable & Truncated Select Candidate Resume -->
+                    <div class="mb-4">
+                        <label class="form-label text-light fw-bold">Select Candidate Resume</label>
+                        <div class="input-group">
+                            <select id="resumeSelect" name="resume_id" class="form-select bg-dark text-white border-secondary text-truncate" required onchange="updateSelectedResume(this)">
+                                <option value="" disabled selected>-- Select an uploaded resume --</option>
+                                {% for r in resumes %}
+                                <option value="{{ r.id }}" data-filename="{{ r.filename }}" data-uploaded="{{ r.uploaded_at.strftime('%b %d, %Y') }}" title="{{ r.filename }}">
+                                    📄 {{ r.filename|truncate(45, True, '...') }} ({{ r.file_type|upper }} • {{ r.uploaded_at.strftime('%b %d') }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-info" type="button" onclick="previewSelectedResume()" title="Preview Resume Text">
+                                <i class="fa-solid fa-eye"></i> Preview
+                            </button>
+                        </div>
+                        <div id="selectedResumeNotice" class="mt-2 text-info small d-none">
+                            <i class="fa-solid fa-circle-info me-1"></i>Selected: <span id="selectedFilename" class="fw-bold font-mono"></span>
+                        </div>
                     </div>
 
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-light">Job Title / Role</label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g. Senior Python Engineer">
+                        <div class="col-md-6 col-12">
+                            <label class="form-label text-light">Job Title / Target Role</label>
+                            <input type="text" name="title" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Senior Python Developer">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 col-12">
                             <label class="form-label text-light">Company Name</label>
-                            <input type="text" name="company" class="form-control" placeholder="e.g. Google">
+                            <input type="text" name="company" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Google / Microsoft">
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label text-light">Paste Job Description Text</label>
-                        <textarea name="content" class="form-control" rows="8" placeholder="Paste full job description responsibilities, requirements, and tech stack here..." required></textarea>
+                        <label class="form-label text-light">Paste Job Description Requirements</label>
+                        <textarea name="content" class="form-control bg-dark text-white border-secondary" rows="8" placeholder="Paste full job description requirements, qualifications, and required tech stack here..." required></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold"><i class="fa-solid fa-calculator me-2"></i>Calculate Match & Missing Skills</button>
+                    <button type="submit" class="btn btn-primary-gradient w-100 py-3 text-uppercase fw-bold rounded-pill">
+                        <i class="fa-solid fa-calculator me-2"></i>Calculate Match & Analyze Skill Gaps
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-card text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="previewModalTitle">Resume Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="previewContent" class="p-3 rounded bg-dark border border-secondary text-light font-mono" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateSelectedResume(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const notice = document.getElementById("selectedResumeNotice");
+    const fnSpan = document.getElementById("selectedFilename");
+    if (opt.value) {
+        fnSpan.textContent = opt.getAttribute("data-filename");
+        notice.classList.remove("d-none");
+    }
+}
+
+function previewSelectedResume() {
+    const sel = document.getElementById("resumeSelect");
+    const val = sel.value;
+    if (!val) {
+        alert("Please select a resume first.");
+        return;
+    }
+    fetch(`/resume/${val}/preview`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById("previewModalTitle").textContent = "Preview: " + data.filename;
+            document.getElementById("previewContent").textContent = data.raw_text;
+            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+            modal.show();
+        })
+        .catch(err => {
+            alert("Failed to load preview.");
+        });
+}
+</script>
 {% endblock %}
